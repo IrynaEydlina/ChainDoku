@@ -1,0 +1,42 @@
+﻿@page "/GamePage"
+@using ChainDoku.Models;
+@using ChainDoku.Services;
+@using System;
+@inject SudokuGridGenerator gridGenerator
+<h3>GamePage</h3>
+
+@* sudoku grid  *@
+<div>
+    @for (var row = 0; row < 9; row++)
+    {
+        <div>
+            @for (int col = 0; col < 9; col++)
+            {
+                <div class="table-cell">@(grid[row, col].Value?.ToString() ?? string.Empty)</div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .table-cell {
+        border-width: 1px;
+        border-style: solid;
+        border-color: black;
+        border-radius: 50%;
+        width:2em;
+        height:2em;
+        vertical-align: middle;
+        text-align: center;
+        display:inline-block;
+    }
+</style>
+
+@code {
+    private SudokuGrid grid;
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        grid = gridGenerator.GenerateGrid();
+    }
+}

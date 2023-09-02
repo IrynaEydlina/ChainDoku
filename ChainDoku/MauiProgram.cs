@@ -1,4 +1,5 @@
 ﻿using ChainDoku.Data;
+using ChainDoku.Services;
 using Microsoft.Extensions.Logging;
 
 namespace ChainDoku
@@ -23,6 +24,7 @@ namespace ChainDoku
 #endif
 
             builder.Services.AddSingleton<WeatherForecastService>();
+            builder.Services.AddSingleton<SudokuGridGenerator>();
 
             return builder.Build();
         }
