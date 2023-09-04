@@ -38,6 +38,6 @@ public class SudokuCell
 
     public void SetValue(int value)
     {
-        Value = value;
+        Value = Value == value ? null : value;
     }
 }
