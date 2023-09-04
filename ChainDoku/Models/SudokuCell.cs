@@ -9,35 +9,57 @@ public class SudokuCell
         Column = column;
         Value = value;
         IsStatic = isStatic;
-        TemporaryValues = new();
+        TemporaryValues = isStatic ? new() : Enumerable.Range(1, 9).ToDictionary(x => x, _ => true);
+        IsBig = value.HasValue;
     }
 
     public Guid Id { get; }
-
     public int Row { get; }
     public int Column { get; }
     public int? Value { get; private set; }
     public bool IsStatic { get; init; }
-    public HashSet<int> TemporaryValues { get; init; }
+    public bool IsBig { get; private set; }
+    public Dictionary<int, bool> TemporaryValues { get; init; }
 
-    public void AddTemporaryValue(int value)
+    public void AddTemp(int value)
     {
-        if (!TemporaryValues.Contains(value))
+        if (IsStatic)
         {
-            TemporaryValues.Add(value);
+            return;
         }
-    }
 
-    public void RemoveTempararyValue(int value)
-    {
-        if (TemporaryValues.Contains(value))
-        {
-            TemporaryValues.Remove(value);
-        }
+        Value = null;
+        TemporaryValues[value] = !TemporaryValues[value];
+        IsBig = false;
     }
 
     public void SetValue(int value)
     {
+        if (IsStatic)
+        {
+            return;
+        }
+
         Value = Value == value ? null : value;
+        ClearTempValues();
+        IsBig = true;
+    }
+
+    public void Clear()
+    {
+        if (IsStatic)
+        {
+            return;
+        }
+        Value = null;
+        ClearTempValues();
+    }
+
+    private void ClearTempValues()
+    {
+        foreach (var key in TemporaryValues.Keys)
+        {
+            TemporaryValues[key] = false;
+        }
     }
 }

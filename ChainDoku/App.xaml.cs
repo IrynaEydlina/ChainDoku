@@ -16,9 +16,9 @@ namespace ChainDoku
                 var nativeWindow = handler.PlatformView;
                 nativeWindow.Activate();
                 IntPtr windowHandle = WinRT.Interop.WindowNative.GetWindowHandle(nativeWindow);
-                WindowId windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(windowHandle);
-                AppWindow appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId);
-                appWindow.Resize(new SizeInt32(700, 900));
+                WindowId windowId = Win32Interop.GetWindowIdFromWindow(windowHandle);
+                AppWindow appWindow = AppWindow.GetFromWindowId(windowId);
+                appWindow.Resize(new SizeInt32(650, 900));
 #endif
             });
 

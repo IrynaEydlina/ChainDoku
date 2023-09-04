@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using BootstrapBlazor.Components
 @using ChainDoku.Models;
 @using ChainDoku.Services;
 @using System;
@@ -15,7 +16,29 @@
                 var j = col;
                 var digitClass = grid[row, col].IsStatic ? "static-value" : "non-static-value";
                 <div class="table-cell @digitClass @string.Join(" ", classes[(row, col)])" row="@row" column="@col" @onclick='() => UpdateSelection(i, j)'>
-                    @(grid[row, col].Value?.ToString() ?? string.Empty)
+                    @if (grid[row, col].IsBig)
+                    {
+                        @(grid[row, col].Value?.ToString() ?? string.Empty)
+                    }
+                    else
+                    {
+                        <div class="sub-grid">
+                            @foreach (var s in SmallStart)
+                            {
+                                <div class="mini-row">
+                                    @for (int mj = 0; mj < 3; mj++)
+                                    {
+                                        <div class="mini-cell @(GetBoldMiniCell(s+mj))">
+                                            @if (@grid[row, col].TemporaryValues[s + mj])
+                                            {
+                                                @(s + mj)
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
                 </div>
             }
         </div>
@@ -24,7 +47,7 @@
 <div class="actions">
     <button>Revert</button>
     <button>Clear</button>
-    <button>Notes</button>
+    <Switch @bind-Value="_isNotesMode" OnText="Notes" OffText="Usual" />
     <button>Help</button>
 </div>
 
@@ -86,12 +109,40 @@
             border-left: 2px solid black;
         }
 
+    .sub-grid {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+    }
+
+    .mini-row {
+        display: flex;
+        flex-direction: row;
+        line-height: 3vw;
+        justify-content: space-around;
+        width: 100%;
+        flex: 1 1 0;
+    }
+
+    .mini-cell {
+        font-size: 3vw;
+        display: flex;
+        flex: 1 1 0;
+        align-content: center;
+        justify-content: center;
+    }
+
     .static-value {
         color: #272932;
     }
 
     .non-static-value {
         color: limegreen;
+    }
+
+    .bold {
+        font-weight: bolder;
     }
 
     .selected {
@@ -101,8 +152,9 @@
     .selected-value {
         background-color: lightgreen !important;
     }
+
     .selected-cell {
-        border:4px double darkgreen !important;
+        border: 4px double darkgreen !important;
     }
 
     .actions {
@@ -125,13 +177,16 @@
     }
 </style>
 
+
 @code {
+    private bool _isNotesMode;
     private const string Selected = "selected";
     private const string SelectedValue = "selected-value";
     private const string SelectedCell = "selected-cell";
     private readonly string[] SelectedStyles = new[] { Selected, SelectedValue, SelectedCell };
     private SudokuGrid grid;
     private readonly object _lock = new object();
+    private readonly int[] SmallStart = new[] { 1, 4, 7 };
 
     private int? ActiveRow;
     private int? ActiveColumn;
@@ -253,7 +308,30 @@
         {
             return;
         }
-        grid[ActiveRow.Value, ActiveColumn.Value].SetValue(value);
+
+        if (!_isNotesMode)
+        {
+            grid[ActiveRow.Value, ActiveColumn.Value].SetValue(value);
+        }
+        else
+        {
+            grid[ActiveRow.Value, ActiveColumn.Value].AddTemp(value);
+        }
+
         RefreshSelection();
+    }
+
+    private string GetBoldMiniCell(int value)
+    {
+        if (!ActiveRow.HasValue || !ActiveColumn.HasValue)
+        {
+            return string.Empty;
+        }
+
+        if (grid[ActiveRow.Value, ActiveColumn.Value].Value == value)
+        {
+            return "bold";
+        }
+        return string.Empty;
     }
 }

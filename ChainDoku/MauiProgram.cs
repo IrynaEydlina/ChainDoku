@@ -25,6 +25,7 @@ namespace ChainDoku
 
             builder.Services.AddSingleton<WeatherForecastService>();
             builder.Services.AddSingleton<SudokuGridGenerator>();
+            builder.Services.AddBootstrapBlazor();
 
             return builder.Build();
         }
