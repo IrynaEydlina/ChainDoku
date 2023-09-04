@@ -5,7 +5,6 @@
 @inject SudokuGridGenerator gridGenerator
 <h3>GamePage</h3>
 
-@* sudoku grid  *@
 <div class="table-grid">
     @for (var row = 0; row < 9; row++)
     {
@@ -14,25 +13,45 @@
             {
                 var i = row;
                 var j = col;
-                <div class="table-cell @(grid[row,col].IsStatic ? "static-value" : "non-static-value") @string.Join(" ", classes[(row, col)])" row="@row" column="@col" @onclick='() => UpdateSelection(i, j)'>
+                var digitClass = grid[row, col].IsStatic ? "static-value" : "non-static-value";
+                <div class="table-cell @digitClass @string.Join(" ", classes[(row, col)])" row="@row" column="@col" @onclick='() => UpdateSelection(i, j)'>
                     @(grid[row, col].Value?.ToString() ?? string.Empty)
                 </div>
             }
         </div>
     }
 </div>
+<div class="actions">
+    <button>Revert</button>
+    <button>Clear</button>
+    <button>Notes</button>
+    <button>Help</button>
+</div>
+
+<div class="actions digit-actions">
+    <div @onclick='() => SetDigit(1)'>1</div>
+    <div @onclick='() => SetDigit(2)'>2</div>
+    <div @onclick='() => SetDigit(3)'>3</div>
+    <div @onclick='() => SetDigit(4)'>4</div>
+    <div @onclick='() => SetDigit(5)'>5</div>
+    <div @onclick='() => SetDigit(6)'>6</div>
+    <div @onclick='() => SetDigit(7)'>7</div>
+    <div @onclick='() => SetDigit(8)'>8</div>
+    <div @onclick='() => SetDigit(9)'>9</div>
+</div>
 
 <style>
     .table-grid {
-        display:flex;
+        display: flex;
         flex-direction: column;
         -webkit-user-select: none; /* Safari */
         -ms-user-select: none; /* IE 10 and IE 11 */
         user-select: none; /* Standard syntax */
+        background-color: #f1f2eb;
     }
 
     .table-row {
-        width: 18em;
+        width: 90vw;
         display: flex;
     }
 
@@ -48,14 +67,17 @@
         border-width: 1px;
         border-style: solid;
         border-color: black;
-        width: 2em;
-        height: 2em;
+        width: 10vw;
+        height: 10vw;
         vertical-align: middle;
         text-align: center;
         display: flex;
         align-items: center;
         justify-content: center;
+        font-size: 5vw;
+        cursor: pointer;
     }
+
         .table-cell:nth-child(3n+3) {
             border-right: 2px solid black;
         }
@@ -65,24 +87,49 @@
         }
 
     .static-value {
-        color: black;
+        color: #272932;
     }
 
     .non-static-value {
-        color: cadetblue;
+        color: limegreen;
     }
-    
+
     .selected {
-        background-color: mediumpurple;
+        background-color: #b9e3c6;
     }
+
     .selected-value {
-        background-color: indigo !important;
+        background-color: lightgreen !important;
+    }
+    .selected-cell {
+        border:4px double darkgreen !important;
+    }
+
+    .actions {
+        display: flex;
+        padding: 20px 10px;
+        justify-content: space-around;
+        -webkit-user-select: none; /* Safari */
+        -ms-user-select: none; /* IE 10 and IE 11 */
+        user-select: none; /* Standard syntax */
+    }
+
+    actions > div {
+        cursor: pointer;
+    }
+
+    .digit-actions > div {
+        font-size: 6vw;
+        color: darkgreen;
+        cursor: pointer;
     }
 </style>
 
 @code {
     private const string Selected = "selected";
     private const string SelectedValue = "selected-value";
+    private const string SelectedCell = "selected-cell";
+    private readonly string[] SelectedStyles = new[] { Selected, SelectedValue, SelectedCell };
     private SudokuGrid grid;
     private readonly object _lock = new object();
 
@@ -116,17 +163,7 @@
         {
             if (row == ActiveRow && column == ActiveColumn)
             {
-                foreach (var c in classes)
-                {
-                    if (c.Value.Contains(Selected))
-                    {
-                        c.Value.Remove(Selected);
-                    }
-                    if (c.Value.Contains(SelectedValue))
-                    {
-                        c.Value.Remove(SelectedValue);
-                    }
-                }
+                ClearSelection();
                 ActiveRow = null;
                 ActiveColumn = null;
                 return;
@@ -134,38 +171,51 @@
             ActiveRow = row;
             ActiveColumn = column;
 
-            foreach (var c in classes)
+            RefreshSelection();
+        }
+    }
+
+    private void RefreshSelection()
+    {
+        ClearSelection();
+        SetSelection();
+    }
+
+    private void ClearSelection()
+    {
+        foreach (var c in classes)
+        {
+            foreach (var style in SelectedStyles)
             {
-                if (c.Value.Contains(Selected))
+                if (c.Value.Contains(style))
                 {
-                    c.Value.Remove(Selected);
-                }
-                if (c.Value.Contains(SelectedValue))
-                {
-                    c.Value.Remove(SelectedValue);
+                    c.Value.Remove(style);
                 }
             }
+        }
+    }
 
-            var value = grid[row, column].Value;
-
-            foreach (var c in classes)
+    private void SetSelection()
+    {
+        var value = grid[ActiveRow.Value, ActiveColumn.Value].Value;
+        foreach (var c in classes)
+        {
+            if (c.Key.Row == ActiveRow || c.Key.Column == ActiveColumn || IsInSmalSquare(ActiveRow.Value, ActiveColumn.Value, c.Key.Row, c.Key.Column))
             {
-                if (c.Key.Row == row || c.Key.Column == column || IsInSmalSquare(row, column, c.Key.Row, c.Key.Column))
-                {
-                    if (c.Key.Row == row && c.Key.Column == column)
-                    {
-                        c.Value.Add(SelectedValue);
-                    }
-                    else
-                    {
-                        c.Value.Add(Selected);
-                    }
-
-                }
-                if (value.HasValue && value.Value == grid[c.Key.Row, c.Key.Column].Value)
+                if (c.Key.Row == ActiveRow && c.Key.Column == ActiveColumn)
                 {
                     c.Value.Add(SelectedValue);
+                    c.Value.Add(SelectedCell);
                 }
+                else
+                {
+                    c.Value.Add(Selected);
+                }
+
+            }
+            if (value.HasValue && value.Value == grid[c.Key.Row, c.Key.Column].Value)
+            {
+                c.Value.Add(SelectedValue);
             }
         }
     }
@@ -195,5 +245,15 @@
             _subSquares = dic;
             return _subSquares;
         }
+    }
+
+    private void SetDigit(int value)
+    {
+        if (!ActiveRow.HasValue || !ActiveColumn.HasValue || grid[ActiveRow.Value, ActiveColumn.Value].IsStatic)
+        {
+            return;
+        }
+        grid[ActiveRow.Value, ActiveColumn.Value].SetValue(value);
+        RefreshSelection();
     }
 }
