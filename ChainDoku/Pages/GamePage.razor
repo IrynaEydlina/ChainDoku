@@ -1,4 +1,4 @@
-﻿@page "/GamePage"
+﻿@page "/"
 @using ChainDoku.Models;
 @using ChainDoku.Services;
 @using System;
@@ -6,37 +6,194 @@
 <h3>GamePage</h3>
 
 @* sudoku grid  *@
-<div>
+<div class="table-grid">
     @for (var row = 0; row < 9; row++)
     {
-        <div>
+        <div class="table-row row-@row">
             @for (int col = 0; col < 9; col++)
             {
-                <div class="table-cell">@(grid[row, col].Value?.ToString() ?? string.Empty)</div>
+                var i = row;
+                var j = col;
+                <div class="table-cell @(grid[row,col].IsStatic ? "static-value" : "non-static-value") @string.Join(" ", classes[(row, col)])" row="@row" column="@col" @onclick='() => UpdateSelection(i, j)'>
+                    @(grid[row, col].Value?.ToString() ?? string.Empty)
+                </div>
             }
         </div>
     }
 </div>
 
 <style>
+    .table-grid {
+        display:flex;
+        flex-direction: column;
+        -webkit-user-select: none; /* Safari */
+        -ms-user-select: none; /* IE 10 and IE 11 */
+        user-select: none; /* Standard syntax */
+    }
+
+    .table-row {
+        width: 18em;
+        display: flex;
+    }
+
+        .table-row:first-child {
+            border-top: 2px solid black;
+        }
+
+        .table-row:nth-child(3n+3) {
+            border-bottom: 2px solid black;
+        }
+
     .table-cell {
         border-width: 1px;
         border-style: solid;
         border-color: black;
-        border-radius: 50%;
-        width:2em;
-        height:2em;
+        width: 2em;
+        height: 2em;
         vertical-align: middle;
         text-align: center;
-        display:inline-block;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+        .table-cell:nth-child(3n+3) {
+            border-right: 2px solid black;
+        }
+
+        .table-cell:first-child {
+            border-left: 2px solid black;
+        }
+
+    .static-value {
+        color: black;
+    }
+
+    .non-static-value {
+        color: cadetblue;
+    }
+    
+    .selected {
+        background-color: mediumpurple;
+    }
+    .selected-value {
+        background-color: indigo !important;
     }
 </style>
 
 @code {
+    private const string Selected = "selected";
+    private const string SelectedValue = "selected-value";
     private SudokuGrid grid;
+    private readonly object _lock = new object();
+
+    private int? ActiveRow;
+    private int? ActiveColumn;
+
+    private Dictionary<(int Row, int Column), HashSet<string>> classes = new();
+
     protected override void OnInitialized()
     {
         base.OnInitialized();
         grid = gridGenerator.GenerateGrid();
+        for (int i = 0; i < 9; i++)
+        {
+            for (int j = 0; j < 9; j++)
+            {
+                classes[(i, j)] = new HashSet<string>
+                {
+                    "table-cell",
+                    $"row-{i}",
+                    $"col-{j}"
+                };
+            }
+        }
+
+    }
+
+    private void UpdateSelection(int row, int column)
+    {
+        lock (_lock)
+        {
+            if (row == ActiveRow && column == ActiveColumn)
+            {
+                foreach (var c in classes)
+                {
+                    if (c.Value.Contains(Selected))
+                    {
+                        c.Value.Remove(Selected);
+                    }
+                    if (c.Value.Contains(SelectedValue))
+                    {
+                        c.Value.Remove(SelectedValue);
+                    }
+                }
+                ActiveRow = null;
+                ActiveColumn = null;
+                return;
+            }
+            ActiveRow = row;
+            ActiveColumn = column;
+
+            foreach (var c in classes)
+            {
+                if (c.Value.Contains(Selected))
+                {
+                    c.Value.Remove(Selected);
+                }
+                if (c.Value.Contains(SelectedValue))
+                {
+                    c.Value.Remove(SelectedValue);
+                }
+            }
+
+            var value = grid[row, column].Value;
+
+            foreach (var c in classes)
+            {
+                if (c.Key.Row == row || c.Key.Column == column || IsInSmalSquare(row, column, c.Key.Row, c.Key.Column))
+                {
+                    if (c.Key.Row == row && c.Key.Column == column)
+                    {
+                        c.Value.Add(SelectedValue);
+                    }
+                    else
+                    {
+                        c.Value.Add(Selected);
+                    }
+
+                }
+                if (value.HasValue && value.Value == grid[c.Key.Row, c.Key.Column].Value)
+                {
+                    c.Value.Add(SelectedValue);
+                }
+            }
+        }
+    }
+
+    private bool IsInSmalSquare(int row, int column, int newRow, int newColumn) => SubSquares[(row, column)] == SubSquares[(newRow, newColumn)];
+
+    private static IReadOnlyDictionary<(int, int), int> _subSquares = null;
+
+    private IReadOnlyDictionary<(int, int), int> SubSquares
+    {
+        get
+        {
+            if (_subSquares != null)
+            {
+                return _subSquares;
+            }
+            var dic = new Dictionary<(int, int), int>();
+            for (int i = 0; i < 9; i++)
+            {
+                for (int j = 0; j < 9; j++)
+                {
+                    var startRow = i / 3;
+                    var startColumn = j / 3;
+                    dic.Add((i, j), startRow * 3 + startColumn);
+                }
+            }
+            _subSquares = dic;
+            return _subSquares;
+        }
     }
 }

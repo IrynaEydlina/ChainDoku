@@ -16,7 +16,7 @@
         <ApplicationTitle>ChainDoku</ApplicationTitle>
 
         <!-- App Identifier -->
-        <ApplicationId>com.companyname.chaindoku</ApplicationId>
+        <ApplicationId>com.itklab.chaindoku</ApplicationId>
         <ApplicationIdGuid>FB7ABD87-3CFE-4691-9288-0CD2DF177979</ApplicationIdGuid>
 
         <!-- Versions -->
@@ -30,6 +30,16 @@
         <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
     </PropertyGroup>
+
+	<PropertyGroup Condition="$(TargetFramework.Contains('-ios'))">
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(TargetFramework)'=='net7.0-ios'">
+	  <CreatePackage>false</CreatePackage>
+	  <CodesignKey>Apple Development: artemtk@ukr.net (7VAMQ7B7JS)</CodesignKey>
+	  <CodesignProvicion>VS: com.itlab.chaindoku.development </CodesignProvicion>
+	  <ProvisioningType>automatic</ProvisioningType>
+	</PropertyGroup>
 
     <ItemGroup>
         <!-- App Icon -->
