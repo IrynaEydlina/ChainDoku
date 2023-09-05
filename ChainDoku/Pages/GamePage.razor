@@ -4,83 +4,86 @@
 @using System;
 @inject SudokuGridGenerator gridGenerator
 @inject StateService stateService
-<h3 style="
-    justify-content: center;
-    display: flex;
-">
+<h3 style="justify-content: center;display: flex;">
     GamePage
 </h3>
-
-<div class="table-grid">
-    @for (var row = 0; row < 9; row++)
-    {
-        <div class="table-row">
-            @for (int col = 0; col < 9; col++)
-            {
-                var i = row;
-                var j = col;
-                var digitClass = grid[row, col].IsStatic ? "static-value" : "non-static-value";
-                <div class="table-cell @digitClass @string.Join(" ", classes[(row, col)])" @onclick='() => UpdateSelection(i, j)'>
-                    @if (grid[row, col].IsBig)
-                    {
-                        @(grid[row, col].Value?.ToString() ?? string.Empty)
-                    }
-                    else
-                    {
-                        <div class="sub-grid">
-                            @foreach (var s in SmallStart)
-                            {
-                                <div class="mini-row">
-                                    @for (int mj = 0; mj < 3; mj++)
-                                    {
-                                        <span class="mini-cell @(GetBoldMiniCell(s+mj))">
-                                            @if (@grid[row, col].TemporaryValues[s + mj])
-                                            {
-                                                @(s + mj)
-                                            }
-                                        </span>
-                                    }
-                                </div>
-                            }
-                        </div>
-                    }
-                </div>
-            }
-        </div>
-    }
-</div>
-<div class="actions button-actions">
-    <button @onclick='Revert'>
-        <i class="oi oi-action-undo" aria-hidden="true"></i>
-        <span>Revert</span>
-    </button>
-    <button @onclick='Clear'>
-        <i class="oi oi-trash" aria-hidden="true"></i>
-        <span>Clear</span>
-    </button>
-    <button @onclick='ChangeMode'>
-        <i class="oi oi-pencil @(_isNotesMode ? "notes" : "")" aria-hidden="true"></i>
-        <span>Notes</span>
-    </button>
-    <button class="disabled">
-        <i class="oi oi-info" aria-hidden="true"></i>
-        <span>Help</span>
-    </button>
-</div>
-
-<div class="actions digit-actions">
-    <button @onclick='() => SetDigit(1)'>1</button>
-    <button @onclick='() => SetDigit(2)'>2</button>
-    <button @onclick='() => SetDigit(3)'>3</button>
-    <button @onclick='() => SetDigit(4)'>4</button>
-    <button @onclick='() => SetDigit(5)'>5</button>
-    <button @onclick='() => SetDigit(6)'>6</button>
-    <button @onclick='() => SetDigit(7)'>7</button>
-    <button @onclick='() => SetDigit(8)'>8</button>
-    <button @onclick='() => SetDigit(9)'>9</button>
+<div class="game">
+    <div class="table-grid">
+        @for (var row = 0; row < 9; row++)
+        {
+            <div class="table-row">
+                @for (int col = 0; col < 9; col++)
+                {
+                    var i = row;
+                    var j = col;
+                    var digitClass = grid[row, col].IsStatic ? "static-value" : "non-static-value";
+                    <div class="table-cell @digitClass @string.Join(" ", classes[(row, col)])" @onclick='() => UpdateSelection(i, j)'>
+                        @if (grid[row, col].IsBig)
+                        {
+                            @(grid[row, col].Value?.ToString() ?? string.Empty)
+                        }
+                        else
+                        {
+                            <div class="sub-grid">
+                                @foreach (var s in SmallStart)
+                                {
+                                    <div class="mini-row">
+                                        @for (int mj = 0; mj < 3; mj++)
+                                        {
+                                            <span class="mini-cell @(GetBoldMiniCell(s+mj))">
+                                                @if (@grid[row, col].TemporaryValues[s + mj])
+                                                {
+                                                    @(s + mj)
+                                                }
+                                            </span>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+    <div class="actions button-actions">
+        <button class="disabled" @onclick='Revert'>
+            <i class="oi oi-action-undo" aria-hidden="true"></i>
+            <span>Revert</span>
+        </button>
+        <button @onclick='Clear'>
+            <i class="oi oi-trash" aria-hidden="true"></i>
+            <span>Clear</span>
+        </button>
+        <button @onclick='ChangeMode'>
+            <i class="oi oi-pencil @(_isNotesMode ? "notes" : "")" aria-hidden="true"></i>
+            <span>Notes</span>
+        </button>
+        <button class="disabled">
+            <i class="oi oi-info" aria-hidden="true"></i>
+            <span>Help</span>
+        </button>
+    </div>
+    <div class="actions digit-actions">
+        <button @onclick='() => SetDigit(1)'>1</button>
+        <button @onclick='() => SetDigit(2)'>2</button>
+        <button @onclick='() => SetDigit(3)'>3</button>
+        <button @onclick='() => SetDigit(4)'>4</button>
+        <button @onclick='() => SetDigit(5)'>5</button>
+        <button @onclick='() => SetDigit(6)'>6</button>
+        <button @onclick='() => SetDigit(7)'>7</button>
+        <button @onclick='() => SetDigit(8)'>8</button>
+        <button @onclick='() => SetDigit(9)'>9</button>
+    </div>
 </div>
 
 <style>
+    .game {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
     .table-grid {
         display: flex;
         flex-direction: column;
@@ -93,7 +96,7 @@
     }
 
     .table-row {
-        width: 90vw;
+        width: 100%;
         display: flex;
     }
 
@@ -109,15 +112,16 @@
         border-width: 1px;
         border-style: solid;
         border-color: black;
-        width: 10vw;
+        height: 10vw;
         height: 10vw;
         vertical-align: middle;
         text-align: center;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 7vw;
+        font-size: 9vw;
         cursor: pointer;
+        flex: 1 1 0;
     }
 
         .table-cell:nth-child(3n+3) {
@@ -162,6 +166,7 @@
 
     .bold {
         font-weight: bold;
+        text-decoration: underline;
     }
 
     .selected {
@@ -182,12 +187,16 @@
 
     .actions {
         display: flex;
-        padding: 20px 10px;
         justify-content: space-around;
         -webkit-user-select: none; /* Safari */
         -ms-user-select: none; /* IE 10 and IE 11 */
         user-select: none; /* Standard syntax */
     }
+
+        .actions > button:active {
+            background-color: aliceblue;
+            border-radius: 20px;
+        }
 
     .button-actions > button {
         display: flex;
@@ -200,19 +209,16 @@
         cursor: pointer;
         border: unset;
         background-color: inherit;
-        border-radius: 20px;
     }
 
-        .button-actions > button:active {
-            background-color: aliceblue;
-        }
+
 
         .button-actions > button > i {
-            font-size: 5vw;
+            font-size: 9vw;
         }
 
         .button-actions > button > span {
-            font-size: 2vw;
+            font-size: 3vw;
         }
 
     .disabled {
@@ -225,7 +231,7 @@
     }
 
         .digit-actions > button {
-            font-size: 8vw;
+            font-size: 10vw;
             color: darkgreen;
             cursor: pointer;
             border: unset;
@@ -234,10 +240,6 @@
             flex: 1 1 0;
             justify-content: center;
         }
-
-            .digit-actions > button:active {
-                background-color: aliceblue;
-            }
 </style>
 
 @code {
@@ -266,7 +268,7 @@
                 classes[(i, j)] = new();
             }
         }
-        stateService.SaveState(grid.Cells);
+
     }
 
     private void UpdateSelection(int row, int column)
@@ -309,7 +311,12 @@
 
     private void SetSelection()
     {
-        var value = grid[ActiveRow.Value, ActiveColumn.Value].Value;
+        if (!ActiveCell)
+        {
+            return;
+        }
+
+        var value = ActiveGridCell.Value;
         foreach (var c in classes)
         {
             if (c.Key.Row == ActiveRow || c.Key.Column == ActiveColumn || IsInSmalSquare(ActiveRow.Value, ActiveColumn.Value, c.Key.Row, c.Key.Column))
@@ -367,12 +374,12 @@
 
     private string GetBoldMiniCell(int value)
     {
-        if (!ActiveRow.HasValue || !ActiveColumn.HasValue)
+        if (!ActiveCell)
         {
             return string.Empty;
         }
 
-        if (grid[ActiveRow.Value, ActiveColumn.Value].Value == value)
+        if (ActiveGridCell.Value == value)
         {
             return "bold";
         }

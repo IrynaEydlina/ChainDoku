@@ -9,6 +9,8 @@ internal class StateService
 
     public void SaveState(List<SudokuCell> cells)
     {
+        return;
+        // todo implement proper solution
         var data = JsonSerializer.Serialize(cells);
         _states.Push(data);
     }

@@ -10,7 +10,7 @@ public class SudokuCell
         Column = column;
         Value = value;
         IsStatic = isStatic;
-        TemporaryValues = isStatic ? new() : Enumerable.Range(1, 9).ToDictionary(x => x, _ => true);
+        TemporaryValues = isStatic ? new() : Enumerable.Range(1, 9).ToDictionary(x => x, _ => false);
         IsBig = isStatic;
     }
 
