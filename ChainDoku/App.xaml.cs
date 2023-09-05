@@ -1,7 +1,8 @@
-﻿using Microsoft.UI;
+﻿#if WINDOWS && DEBUG
+using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Windows.Graphics;
-
+#endif
 namespace ChainDoku
 {
     public partial class App : Application

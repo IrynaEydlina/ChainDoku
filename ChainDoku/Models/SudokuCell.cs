@@ -1,19 +1,19 @@
-﻿namespace ChainDoku.Models;
+﻿using System.Text.Json.Serialization;
+
+namespace ChainDoku.Models;
 
 public class SudokuCell
 {
     public SudokuCell(int row, int column, int? value, bool isStatic)
     {
-        Id = Guid.NewGuid();
         Row = row;
         Column = column;
         Value = value;
         IsStatic = isStatic;
         TemporaryValues = isStatic ? new() : Enumerable.Range(1, 9).ToDictionary(x => x, _ => true);
-        IsBig = value.HasValue;
+        IsBig = isStatic;
     }
 
-    public Guid Id { get; }
     public int Row { get; }
     public int Column { get; }
     public int? Value { get; private set; }
