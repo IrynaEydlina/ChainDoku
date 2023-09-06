@@ -1,0 +1,57 @@
+﻿@using ChainDoku.Models;
+@using System.Text;
+@using ChainDoku.Services;
+
+<button class="table-cell @GetClasses()" @onclick='() => Click(Cell.Row, Cell.Column)'>
+    @if (Cell.Value.HasValue || Cell.IsEmpty)
+    {
+        @(Cell.Value?.ToString() ?? string.Empty)
+    }
+    else
+    {
+        <MiniGrid Values="Cell.TemporaryValues" ActiveValue="State.ActiveValue" />
+    }
+</button>
+@code {
+    [Parameter]
+    public GridState State { get; set; }
+    
+    [Parameter]
+    public SudokuCell Cell { get; set; }
+
+    [Parameter]
+    public Action<int, int> Click { get; set; }
+
+    public string GetClasses()
+    {
+        var sb = new StringBuilder();
+        if (Cell.IsStatic)
+        {
+            sb.Append("static-value");
+        }
+        else
+        {
+            sb.Append("non-static-value");
+        }
+
+        if (!State.ActiveRow.HasValue || !State.ActiveColumn.HasValue)
+        {
+            return sb.ToString();
+        }
+
+        if (Cell.Row == State.ActiveRow && Cell.Column == State.ActiveColumn)
+        {
+            sb.Append(" selected-cell");
+        }
+        else if (Cell.Row == State.ActiveRow || Cell.Column == State.ActiveColumn || SudokuHelper.SubSquares[State.ActiveRow.Value, State.ActiveColumn.Value] == SudokuHelper.SubSquares[Cell.Row, Cell.Column])
+        {
+            sb.Append(" selected");
+        }
+        else if (State.ActiveValue.HasValue && Cell.Value == State.ActiveValue)
+        {
+            sb.Append(" selected-value");
+        }
+
+        return sb.ToString();
+    }
+}

@@ -1,0 +1,169 @@
+﻿.header {
+    justify-content: center;
+    display: flex;
+}
+
+.game {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin: auto;
+}
+
+.table-grid {
+    display: flex;
+    flex-direction: column;
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10 and IE 11 */
+    user-select: none; /* Standard syntax */
+    background-color: #f1f2eb;
+    width: 95vw;
+    margin: auto;
+}
+
+.table-row {
+    width: 100%;
+    display: flex;
+}
+
+    .table-row:first-child {
+        border-top: 2px solid black;
+    }
+
+    .table-row:nth-child(3n+3) {
+        border-bottom: 2px solid black;
+    }
+
+.table-cell {
+    border-width: 1px;
+    border-style: solid;
+    border-color: black;
+    height: 10.5vw;
+    height: 10.5vw;
+    vertical-align: middle;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9vw;
+    cursor: pointer;
+    flex: 1 1 0;
+}
+
+    .table-cell:nth-child(3n+3) {
+        border-right: 2px solid black;
+    }
+
+    .table-cell:first-child {
+        border-left: 2px solid black;
+    }
+
+.sub-grid {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    color: black;
+}
+
+.mini-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    width: 100%;
+    flex: 1 1 0;
+}
+
+.mini-cell {
+    font-size: 3vw;
+    display: flex;
+    flex: 1 1 0;
+    align-content: center;
+    justify-content: center;
+}
+
+.static-value {
+    color: #272932;
+}
+
+.non-static-value {
+    color: dodgerblue;
+}
+
+.bold {
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+.selected {
+    background-color: #b9e3c6;
+}
+
+.selected-value {
+    background-color: lightgreen !important;
+}
+
+.selected-cell {
+    background-color: greenyellow !important;
+}
+
+.notes {
+    color: dodgerblue;
+}
+
+.actions {
+    display: flex;
+    justify-content: space-around;
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10 and IE 11 */
+    user-select: none; /* Standard syntax */
+    margin-left: 15px;
+    margin-right: 15px;
+}
+
+    .actions > button:active {
+        background-color: aliceblue;
+        border-radius: 10px;
+    }
+
+.button-actions > button {
+    display: flex;
+    flex: 0 1 10vw;
+    flex-direction: column;
+    gap: 30px;
+    justify-content: center;
+    align-items: center;
+    width: 10vw;
+    cursor: pointer;
+    border: unset;
+    background-color: inherit;
+    margin-top: 10px;
+}
+
+    .button-actions > button > i {
+        font-size: 9vw;
+    }
+
+    .button-actions > button > span {
+        font-size: 3vw;
+    }
+
+.disabled {
+    pointer-events: none;
+    opacity: 0.4;
+}
+
+.digit-actions {
+    gap: 1vw;
+}
+
+    .digit-actions > button {
+        font-size: 10vw;
+        color: darkgreen;
+        cursor: pointer;
+        border: unset;
+        background-color: inherit;
+        display: flex;
+        flex: 1 1 0;
+        justify-content: center;
+    }

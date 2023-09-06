@@ -1,0 +1,28 @@
+﻿<div class="sub-grid">
+    @for (var s = 1; s < 8; s += 3)
+    {
+        <div class="mini-row">
+            @for (int mj = 0; mj < 3; mj++)
+            {
+                <span class="mini-cell @(SelectedStyle(s+mj))">
+                    @if (Values.Contains(s + mj))
+                    {
+                        @(s + mj)
+                    }
+                </span>
+            }
+        </div>
+    }
+</div>
+@code {
+    [Parameter]
+    public int? ActiveValue { get; set; }
+
+    [Parameter]
+    public HashSet<int> Values { get; set; }
+
+    private string SelectedStyle(int value)
+    {
+        return value == ActiveValue ? "bold" : string.Empty;
+    }
+}
