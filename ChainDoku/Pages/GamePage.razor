@@ -17,21 +17,21 @@
                     var i = row;
                     var j = col;
                     var digitClass = grid[row, col].IsStatic ? "static-value" : "non-static-value";
-                    <div class="table-cell @digitClass @string.Join(" ", classes[(row, col)])" @onclick='() => UpdateSelection(i, j)'>
-                        @if (grid[row, col].IsBig)
+                    <div class="table-cell @digitClass @string.Join(" ", classes[row, col])" @onclick='() => UpdateSelection(i, j)'>
+                        @if (grid[row, col].Value.HasValue || grid[row,col].IsEmpty)
                         {
                             @(grid[row, col].Value?.ToString() ?? string.Empty)
                         }
                         else
                         {
                             <div class="sub-grid">
-                                @foreach (var s in SmallStart)
+                                @for(var s = 1; s < 8; s+=3)
                                 {
                                     <div class="mini-row">
                                         @for (int mj = 0; mj < 3; mj++)
                                         {
                                             <span class="mini-cell @(GetBoldMiniCell(s+mj))">
-                                                @if (@grid[row, col].TemporaryValues[s + mj])
+                                                @if (@grid[row, col].TemporaryValues.Contains(s + mj))
                                                 {
                                                     @(s + mj)
                                                 }
@@ -211,8 +211,6 @@
         background-color: inherit;
     }
 
-
-
         .button-actions > button > i {
             font-size: 9vw;
         }
@@ -249,13 +247,12 @@
     private const string SelectedCell = "selected-cell";
     private readonly string[] SelectedStyles = new[] { Selected, SelectedValue, SelectedCell };
     private SudokuGrid grid;
-    private readonly object _lock = new object();
     private readonly int[] SmallStart = new[] { 1, 4, 7 };
 
     private int? ActiveRow;
     private int? ActiveColumn;
 
-    private Dictionary<(int Row, int Column), HashSet<string>> classes = new();
+    private HashSet<string>[,] classes = new HashSet<string>[9, 9];
 
     protected override void OnInitialized()
     {
@@ -265,81 +262,80 @@
         {
             for (int j = 0; j < 9; j++)
             {
-                classes[(i, j)] = new();
+                classes[i, j] = new();
             }
         }
-
     }
 
     private void UpdateSelection(int row, int column)
     {
-        lock (_lock)
+        if (row == ActiveRow && column == ActiveColumn)
         {
-            if (row == ActiveRow && column == ActiveColumn)
-            {
-                ClearSelection();
-                ActiveRow = null;
-                ActiveColumn = null;
-                return;
-            }
+            ActiveRow = null;
+            ActiveColumn = null;
+        }
+        else
+        {
             ActiveRow = row;
             ActiveColumn = column;
+        }
 
-            RefreshSelection();
+        RefreshSelection();
+    }
+
+    private void ClearSelection()
+    {
+        for (int i = 0; i < 9; i++)
+        {
+            for (int j = 0; j < 9; j++)
+            {
+                classes[i, j].RemoveWhere(SelectedStyles.Contains);
+            }
         }
     }
 
     private void RefreshSelection()
     {
-        ClearSelection();
-        SetSelection();
-    }
-
-    private void ClearSelection()
-    {
-        foreach (var c in classes)
-        {
-            foreach (var style in SelectedStyles)
-            {
-                if (c.Value.Contains(style))
-                {
-                    c.Value.Remove(style);
-                }
-            }
-        }
-    }
-
-    private void SetSelection()
-    {
         if (!ActiveCell)
         {
+            ClearSelection();
             return;
         }
 
-        var value = ActiveGridCell.Value;
-        foreach (var c in classes)
+        var value = ActiveGridCell?.Value;
+        for (int row = 0; row < 9; row++)
         {
-            if (c.Key.Row == ActiveRow || c.Key.Column == ActiveColumn || IsInSmalSquare(ActiveRow.Value, ActiveColumn.Value, c.Key.Row, c.Key.Column))
+            for (int col = 0; col < 9; col++)
             {
-                if (c.Key.Row == ActiveRow && c.Key.Column == ActiveColumn)
+                if (row == ActiveRow || col == ActiveColumn || IsInSmalSquare(ActiveRow.Value, ActiveColumn.Value, row, col))
                 {
-                    c.Value.Add(SelectedValue);
-                    c.Value.Add(SelectedCell);
+                    if (row == ActiveRow && col == ActiveColumn)
+                    {
+                        classes[row, col].Add(SelectedValue);
+                        classes[row, col].Add(SelectedCell);
+                    }
+                    else
+                    {
+                        classes[row, col].Remove(SelectedValue);
+                        classes[row, col].Remove(SelectedCell);
+                        classes[row, col].Add(Selected);
+
+                    }
+                }
+                else if (value.HasValue && value.Value == grid[row, col].Value)
+                {
+                    classes[row, col].Add(SelectedValue);
                 }
                 else
                 {
-                    c.Value.Add(Selected);
+                    classes[row, col].Clear();
                 }
 
-            }
-            if (value.HasValue && value.Value == grid[c.Key.Row, c.Key.Column].Value)
-            {
-                c.Value.Add(SelectedValue);
             }
         }
     }
 
-    private bool IsInSmalSquare(int row, int column, int newRow, int newColumn) => grid.SubSquares[(row, column)] == grid.SubSquares[(newRow, newColumn)];
+    private bool IsInSmalSquare(int row, int column, int newRow, int newColumn) => grid.SubSquares[row, column] == grid.SubSquares[newRow, newColumn];
 
     private void SetDigit(int value)
     {
@@ -348,7 +344,7 @@
             return;
         }
 
-        stateService.SaveState(grid.Cells);
+        stateService.SaveState(grid.Grid);
 
         if (!_isNotesMode)
         {
@@ -368,7 +364,7 @@
 
     private void UpdateTempValuesWhenBigValueIsSet(int value)
     {
-        stateService.SaveState(grid.Cells);
+        stateService.SaveState(grid.Grid);
         grid.RemoveTempValues(ActiveRow.Value, ActiveColumn.Value, value);
     }
 
@@ -388,7 +384,7 @@
 
     private void Revert()
     {
-        if (stateService.TryGetState(out var oldCells))
+        if (stateService.TryGetState(out SudokuCell[,] oldCells))
         {
             grid.SetState(oldCells);
             RefreshSelection();
@@ -402,18 +398,18 @@
 
     private void Clear()
     {
-        if (!ActiveCell || ActiveGridCell.IsStatic)
+        if (!ActiveCell || ActiveGridCell.IsStatic || ActiveGridCell.IsEmpty)
         {
             return;
         }
-        if (ActiveGridCell.Value.HasValue || ActiveGridCell.TemporaryValues.Any(v => v.Value))
-        {
-            stateService.SaveState(grid.Cells);
-            ActiveGridCell.Clear();
-        }
+
+        stateService.SaveState(grid.Grid);
+        ActiveGridCell.Clear();
     }
 
     private SudokuCell ActiveGridCell => grid[ActiveRow.Value, ActiveColumn.Value];
 
     private bool ActiveCell => ActiveRow.HasValue && ActiveColumn.HasValue;
+
+    private int? ActiveValue => ActiveCell ? ActiveGridCell.Value : null;
 }

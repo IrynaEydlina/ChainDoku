@@ -1,5 +1,4 @@
-﻿using ChainDoku.Models;
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace ChainDoku.Services;
 
@@ -7,7 +6,7 @@ internal class StateService
 {
     private readonly Stack<string> _states = new();
 
-    public void SaveState(List<SudokuCell> cells)
+    public void SaveState<T>(T cells)
     {
         return;
         // todo implement proper solution
@@ -15,15 +14,15 @@ internal class StateService
         _states.Push(data);
     }
 
-    public bool TryGetState(out List<SudokuCell> cells)
+    public bool TryGetState<T>(out T cells)
     {
         if (_states.TryPop(out var state))
         {
-            cells = JsonSerializer.Deserialize<List<SudokuCell>>(state);
+            cells = JsonSerializer.Deserialize<T>(state);
             return true;
         }
 
-        cells = null;
+        cells = default;
         return false;
     }
 
