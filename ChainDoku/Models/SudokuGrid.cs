@@ -2,70 +2,62 @@
 
 public class SudokuGrid
 {
-    private IReadOnlyDictionary<(int, int), int> _subSquares = null;
-    public IReadOnlyDictionary<(int, int), int> SubSquares
+    private const int Size = 9;
+    public int[,] SubSquares { get; private set; }
+    public SudokuGrid(List<SudokuCell> cells)
     {
-        get
+        Grid = new SudokuCell[Size, Size];
+        for (int i = 0; i < Size; i++)
         {
-            if (_subSquares != null)
+            for (int j = 0; j < Size; j++)
             {
-                return _subSquares;
+                Grid[i, j] = cells.First(c => c.Row == i && c.Column == j);
             }
-            var dic = new Dictionary<(int, int), int>();
-            for (int i = 0; i < 9; i++)
+        }
+        Init();
+    }
+
+    public SudokuGrid(SudokuCell[,] grid)
+    {
+        Grid = grid;
+        Init();
+    }
+
+    private void Init()
+    {
+        SubSquares = new int[Size, Size];
+        for (int i = 0; i < Size; i++)
+        {
+            for (int j = 0; j < Size; j++)
             {
-                for (int j = 0; j < 9; j++)
-                {
-                    var startRow = i / 3;
-                    var startColumn = j / 3;
-                    dic.Add((i, j), startRow * 3 + startColumn);
-                }
+                var startRow = i / 3;
+                var startColumn = j / 3;
+                SubSquares[i, j] = startRow * 3 + startColumn;
             }
-            _subSquares = dic;
-            return _subSquares;
         }
     }
 
-    public SudokuGrid(List<SudokuCell> cells) => Cells = cells;
+    public SudokuCell[,] Grid { get; private set; }
 
-    public SudokuCell this[int row, int column] => Cells.FirstOrDefault(c => c.Row == row && c.Column == column);
-
-    public List<SudokuCell> Cells { get; private set; }
+    public SudokuCell this[int row, int column] => Grid[row, column];
 
     public void RemoveTempValues(int row, int column, int value)
     {
-        RemoveTempValuesFromRow(row, value);
-        RemoveTempValuesFromColumn(column, value);
-        RemoveTempValuesFromSubGrid(row, column, value);
-    }
-
-    public void RemoveTempValuesFromRow(int row, int value)
-    {
-        foreach (var cell in Cells.Where(c => c.Row == row))
+        var gridIndex = SubSquares[row, column];
+        for (var i = 0; i < Size; i++)
         {
-            cell.TemporaryValues[value] = false;
+            for (var j = 0; j < Size; j++)
+            {
+                if (!Grid[i,j].IsStatic && (i == row || j == column || gridIndex == SubSquares[i, j]))
+                {
+                    Grid[i, j].TemporaryValues.Remove(value);
+                }
+            }
         }
     }
 
-    public void RemoveTempValuesFromColumn(int column, int value)
+    public void SetState(SudokuCell[,] grid)
     {
-        foreach (var cell in Cells.Where(c => c.Column == column))
-        {
-            cell.TemporaryValues[value] = false;
-        }
-    }
-
-    public void RemoveTempValuesFromSubGrid(int row, int column, int value)
-    {
-        var gridIndex = SubSquares[(row, column)];
-        foreach (var cell in Cells.Where(c => SubSquares[(c.Row, c.Column)] == gridIndex))
-        {
-            cell.TemporaryValues[value] = false;
-        }
-    }
-
-    public void SetState(List<SudokuCell> cells)
-    {
-        Cells = cells;
+        Grid = grid;
     }
 }
