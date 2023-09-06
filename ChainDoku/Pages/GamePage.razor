@@ -1,10 +1,12 @@
 ﻿@page "/"
+@using ChainDoku.Components
 @using ChainDoku.Models;
 @using ChainDoku.Services;
 @using System;
 @inject SudokuGridGenerator gridGenerator
 @inject StateService stateService
-<h3 style="justify-content: center;display: flex;">
+
+<h3 class="header">
     GamePage
 </h3>
 <div class="game">
@@ -14,55 +16,16 @@
             <div class="table-row">
                 @for (int col = 0; col < 9; col++)
                 {
-                    var i = row;
-                    var j = col;
-                    var digitClass = grid[row, col].IsStatic ? "static-value" : "non-static-value";
-                    <div class="table-cell @digitClass @string.Join(" ", classes[row, col])" @onclick='() => UpdateSelection(i, j)'>
-                        @if (grid[row, col].Value.HasValue || grid[row,col].IsEmpty)
-                        {
-                            @(grid[row, col].Value?.ToString() ?? string.Empty)
-                        }
-                        else
-                        {
-                            <div class="sub-grid">
-                                @for(var s = 1; s < 8; s+=3)
-                                {
-                                    <div class="mini-row">
-                                        @for (int mj = 0; mj < 3; mj++)
-                                        {
-                                            <span class="mini-cell @(GetBoldMiniCell(s+mj))">
-                                                @if (@grid[row, col].TemporaryValues.Contains(s + mj))
-                                                {
-                                                    @(s + mj)
-                                                }
-                                            </span>
-                                        }
-                                    </div>
-                                }
-                            </div>
-                        }
-                    </div>
+                    <SCell Cell="_grid[row,col]" Click="UpdateSelection" State="_state" />
                 }
             </div>
         }
     </div>
     <div class="actions button-actions">
-        <button class="disabled" @onclick='Revert'>
-            <i class="oi oi-action-undo" aria-hidden="true"></i>
-            <span>Revert</span>
-        </button>
-        <button @onclick='Clear'>
-            <i class="oi oi-trash" aria-hidden="true"></i>
-            <span>Clear</span>
-        </button>
-        <button @onclick='ChangeMode'>
-            <i class="oi oi-pencil @(_isNotesMode ? "notes" : "")" aria-hidden="true"></i>
-            <span>Notes</span>
-        </button>
-        <button class="disabled">
-            <i class="oi oi-info" aria-hidden="true"></i>
-            <span>Help</span>
-        </button>
+        <ActionButton Action="Revert" Disabled="true" Icon="oi-action-undo" Text="Revert" />
+        <ActionButton Action="Clear" Disabled="false" Icon="oi-trash" Text="Clear" />
+        <ActionButton Action="ChangeMode" Disabled="false" Icon="oi-pencil" Text="Notes" Class="@(_isNotesMode ? "notes" : "")" />
+        <ActionButton Action="Revert" Disabled="true" Icon="oi-action-undo" Text="Help" />
     </div>
     <div class="actions digit-actions">
         <button @onclick='() => SetDigit(1)'>1</button>
@@ -77,265 +40,34 @@
     </div>
 </div>
 
-<style>
-    .game {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .table-grid {
-        display: flex;
-        flex-direction: column;
-        -webkit-user-select: none; /* Safari */
-        -ms-user-select: none; /* IE 10 and IE 11 */
-        user-select: none; /* Standard syntax */
-        background-color: #f1f2eb;
-        width: 90vw;
-        margin: auto;
-    }
-
-    .table-row {
-        width: 100%;
-        display: flex;
-    }
-
-        .table-row:first-child {
-            border-top: 2px solid black;
-        }
-
-        .table-row:nth-child(3n+3) {
-            border-bottom: 2px solid black;
-        }
-
-    .table-cell {
-        border-width: 1px;
-        border-style: solid;
-        border-color: black;
-        height: 10vw;
-        height: 10vw;
-        vertical-align: middle;
-        text-align: center;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 9vw;
-        cursor: pointer;
-        flex: 1 1 0;
-    }
-
-        .table-cell:nth-child(3n+3) {
-            border-right: 2px solid black;
-        }
-
-        .table-cell:first-child {
-            border-left: 2px solid black;
-        }
-
-    .sub-grid {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        height: 100%;
-        color: black;
-    }
-
-    .mini-row {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-around;
-        width: 100%;
-        flex: 1 1 0;
-    }
-
-    .mini-cell {
-        font-size: 3vw;
-        display: flex;
-        flex: 1 1 0;
-        align-content: center;
-        justify-content: center;
-    }
-
-    .static-value {
-        color: #272932;
-    }
-
-    .non-static-value {
-        color: dodgerblue;
-    }
-
-    .bold {
-        font-weight: bold;
-        text-decoration: underline;
-    }
-
-    .selected {
-        background-color: #b9e3c6;
-    }
-
-    .selected-value {
-        background-color: lightgreen !important;
-    }
-
-    .selected-cell {
-        background-color: greenyellow !important;
-    }
-
-    .notes {
-        color: dodgerblue;
-    }
-
-    .actions {
-        display: flex;
-        justify-content: space-around;
-        -webkit-user-select: none; /* Safari */
-        -ms-user-select: none; /* IE 10 and IE 11 */
-        user-select: none; /* Standard syntax */
-    }
-
-        .actions > button:active {
-            background-color: aliceblue;
-            border-radius: 20px;
-        }
-
-    .button-actions > button {
-        display: flex;
-        flex: 0 1 10vw;
-        flex-direction: column;
-        gap: 10px;
-        justify-content: center;
-        align-items: center;
-        width: 10vw;
-        cursor: pointer;
-        border: unset;
-        background-color: inherit;
-    }
-
-        .button-actions > button > i {
-            font-size: 9vw;
-        }
-
-        .button-actions > button > span {
-            font-size: 3vw;
-        }
-
-    .disabled {
-        pointer-events: none;
-        opacity: 0.4;
-    }
-
-    .digit-actions {
-        gap: 1vw;
-    }
-
-        .digit-actions > button {
-            font-size: 10vw;
-            color: darkgreen;
-            cursor: pointer;
-            border: unset;
-            background-color: inherit;
-            display: flex;
-            flex: 1 1 0;
-            justify-content: center;
-        }
-</style>
-
 @code {
     private bool _isNotesMode = false;
-    private const string Selected = "selected";
-    private const string SelectedValue = "selected-value";
-    private const string SelectedCell = "selected-cell";
-    private readonly string[] SelectedStyles = new[] { Selected, SelectedValue, SelectedCell };
-    private SudokuGrid grid;
-    private readonly int[] SmallStart = new[] { 1, 4, 7 };
-
-    private int? ActiveRow;
-    private int? ActiveColumn;
-
-    private HashSet<string>[,] classes = new HashSet<string>[9, 9];
+    private SudokuGrid _grid;
+    private GridState _state;
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        grid = gridGenerator.GenerateGrid();
-        for (int i = 0; i < 9; i++)
-        {
-            for (int j = 0; j < 9; j++)
-            {
-                classes[i, j] = new();
-            }
-        }
+        _grid = gridGenerator.GenerateGrid();
+        _state = new GridState();
     }
 
     private void UpdateSelection(int row, int column)
     {
-        if (row == ActiveRow && column == ActiveColumn)
+        if (row == _state.ActiveRow && column == _state.ActiveColumn)
         {
-            ActiveRow = null;
-            ActiveColumn = null;
+            _state.ActiveRow = null;
+            _state.ActiveColumn = null;
+            _state.ActiveValue = null;
         }
         else
         {
-            ActiveRow = row;
-            ActiveColumn = column;
+            _state.ActiveRow = row;
+            _state.ActiveColumn = column;
+            _state.ActiveValue = _grid[row, column].Value;
         }
-
-        RefreshSelection();
+        StateHasChanged();
     }
-
-    private void ClearSelection()
-    {
-        for (int i = 0; i < 9; i++)
-        {
-            for (int j = 0; j < 9; j++)
-            {
-                classes[i, j].RemoveWhere(SelectedStyles.Contains);
-            }
-        }
-    }
-
-    private void RefreshSelection()
-    {
-        if (!ActiveCell)
-        {
-            ClearSelection();
-            return;
-        }
-
-        var value = ActiveGridCell?.Value;
-        for (int row = 0; row < 9; row++)
-        {
-            for (int col = 0; col < 9; col++)
-            {
-                if (row == ActiveRow || col == ActiveColumn || IsInSmalSquare(ActiveRow.Value, ActiveColumn.Value, row, col))
-                {
-                    if (row == ActiveRow && col == ActiveColumn)
-                    {
-                        classes[row, col].Add(SelectedValue);
-                        classes[row, col].Add(SelectedCell);
-                    }
-                    else
-                    {
-                        classes[row, col].Remove(SelectedValue);
-                        classes[row, col].Remove(SelectedCell);
-                        classes[row, col].Add(Selected);
-
-                    }
-                }
-                else if (value.HasValue && value.Value == grid[row, col].Value)
-                {
-                    classes[row, col].Add(SelectedValue);
-                }
-                else
-                {
-                    classes[row, col].Clear();
-                }
-
-            }
-        }
-    }
-
-    private bool IsInSmalSquare(int row, int column, int newRow, int newColumn) => grid.SubSquares[row, column] == grid.SubSquares[newRow, newColumn];
 
     private void SetDigit(int value)
     {
@@ -344,7 +76,7 @@
             return;
         }
 
-        stateService.SaveState(grid.Grid);
+        stateService.SaveState(_grid.Grid);
 
         if (!_isNotesMode)
         {
@@ -353,41 +85,26 @@
                 UpdateTempValuesWhenBigValueIsSet(value);
             }
             ActiveGridCell.SetValue(value);
+            _state.ActiveValue = value;
         }
         else
         {
             ActiveGridCell.AddTemp(value);
         }
-
-        RefreshSelection();
+        StateHasChanged();
     }
 
     private void UpdateTempValuesWhenBigValueIsSet(int value)
     {
-        stateService.SaveState(grid.Grid);
-        grid.RemoveTempValues(ActiveRow.Value, ActiveColumn.Value, value);
-    }
-
-    private string GetBoldMiniCell(int value)
-    {
-        if (!ActiveCell)
-        {
-            return string.Empty;
-        }
-
-        if (ActiveGridCell.Value == value)
-        {
-            return "bold";
-        }
-        return string.Empty;
+        stateService.SaveState(_grid.Grid);
+        _grid.RemoveTempValues(_state.ActiveRow.Value, _state.ActiveColumn.Value, value);
     }
 
     private void Revert()
     {
         if (stateService.TryGetState(out SudokuCell[,] oldCells))
         {
-            grid.SetState(oldCells);
-            RefreshSelection();
+            _grid.SetState(oldCells);
         }
     }
 
@@ -403,13 +120,11 @@
             return;
         }
 
-        stateService.SaveState(grid.Grid);
+        stateService.SaveState(_grid.Grid);
         ActiveGridCell.Clear();
     }
 
-    private SudokuCell ActiveGridCell => grid[ActiveRow.Value, ActiveColumn.Value];
+    private SudokuCell ActiveGridCell => _grid[_state.ActiveRow.Value, _state.ActiveColumn.Value];
 
-    private bool ActiveCell => ActiveRow.HasValue && ActiveColumn.HasValue;
-
-    private int? ActiveValue => ActiveCell ? ActiveGridCell.Value : null;
+    private bool ActiveCell => _state.ActiveRow.HasValue && _state.ActiveColumn.HasValue;
 }

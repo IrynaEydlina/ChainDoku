@@ -26,8 +26,14 @@ namespace ChainDoku
             builder.Services.AddSingleton<WeatherForecastService>();
             builder.Services.AddSingleton<StateService>();
             builder.Services.AddSingleton<SudokuGridGenerator>();
+            builder.Services.AddSingleton<SettingsService>();
+            
+            var app =  builder.Build();
 
-            return builder.Build();
+            // HACK: Set KeepScreenOn after some time app initialized
+            app.Services.GetService<SettingsService>().Init();
+
+            return app;
         }
     }
 }
