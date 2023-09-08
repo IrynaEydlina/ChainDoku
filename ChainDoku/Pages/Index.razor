@@ -1,7 +1,76 @@
-﻿@page "/Home"
+﻿@page "/"
+@using ChainDoku.Models.Enums;
+@inject NavigationManager NavigationManager;
+<div class="main-content">
+    <header></header>
 
-<h1>Hello, world!</h1>
+    <div class="main-body">
+        <h1>Sudoku</h1>
+        <div class="main-actions">
+            <button class="btn btn-primary" @onclick="Continue">
+                <span class="oi oi-play-circle" aria-hidden="true"></span> Continue
+            </button>
+            <button class="btn btn-success" @onclick="NewGame">
+                New Game
+            </button>
+        </div>
+    </div>
+    <footer>
+        
+    </footer>
+</div>
+<style>
+    .main-content {
+        display: flex;
+        height: 100%;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+    }
 
-Welcome to your new app.
+    header {
+        display: flex;
+    }
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+    main {
+        display: flex;
+    }
+
+    footer {
+        display: flex;
+    }
+
+    .main-body {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 0;
+        justify-content: space-evenly;
+        align-items: center;
+        width: 100%;
+    }
+
+    .main-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        width: 60%;
+    }
+    .main-actions>.btn {
+        height: 50px;
+    }
+</style>
+@code {
+
+    private void Continue()
+    {
+        Guid gameId = Guid.NewGuid();
+        NavigationManager.NavigateTo($"/gamepage/{gameId}");
+    }
+
+    private void NewGame()
+    {
+        NavigationManager.NavigateTo($"/gamepage");
+
+    }
+
+}

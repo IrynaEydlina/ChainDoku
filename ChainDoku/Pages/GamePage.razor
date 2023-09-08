@@ -1,14 +1,25 @@
-﻿@page "/"
+﻿@page "/gamepage/{gameId:guid?}"
 @using ChainDoku.Components
 @using ChainDoku.Models;
 @using ChainDoku.Services;
 @using System;
-@inject SudokuGridGenerator gridGenerator
-@inject StateService stateService
+@using System.Diagnostics;
+@inject SudokuGridGenerator GridGenerator
+@inject StateService StateService
+@inject NavigationManager Navigation
 
-<h3 class="header">
-    GamePage
-</h3>
+<h2 class="title">
+    Sudoku
+</h2>
+<div class="top-actions">
+    <div class="left-actions">
+        <button class="btn btn-secondary" @onclick="GoBack"><i class="oi oi-chevron-left" aria-hidden="true"></i></button>
+    </div>
+    <div class="right-actions">
+        <button class="btn btn-info" @onclick="ConfirmToFillTempValues"><i class="oi oi-beaker" aria-hidden="true"></i></button>
+        <button class="btn btn-secondary" @onclick="ConfitmClearAll"><i class="oi oi-ban" aria-hidden="true"></i></button>
+    </div>
+</div>
 <div class="game">
     <div class="table-grid">
         @for (var row = 0; row < 9; row++)
@@ -25,7 +36,7 @@
         <ActionButton Action="Revert" Disabled="true" Icon="oi-action-undo" Text="Revert" />
         <ActionButton Action="Clear" Disabled="false" Icon="oi-trash" Text="Clear" />
         <ActionButton Action="ChangeMode" Disabled="false" Icon="oi-pencil" Text="Notes" Class="@(_isNotesMode ? "notes" : "")" />
-        <ActionButton Action="Revert" Disabled="true" Icon="oi-action-undo" Text="Help" />
+        <ActionButton Action="Revert" Disabled="true" Icon="oi-info" Text="Help" />
     </div>
     <div class="actions digit-actions">
         <button @onclick='() => SetDigit(1)'>1</button>
@@ -41,6 +52,9 @@
 </div>
 
 @code {
+    [Parameter]
+    public Guid? GameId { get; set; }
+
     private bool _isNotesMode = false;
     private SudokuGrid _grid;
     private GridState _state;
@@ -48,17 +62,22 @@
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        _grid = gridGenerator.GenerateGrid();
+        _grid = GridGenerator.GenerateGrid();
         _state = new GridState();
+        Debug.WriteLine($"Is New Game : {GameId}");
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/");
     }
 
     private void UpdateSelection(int row, int column)
     {
+        PerformFeedback();
         if (row == _state.ActiveRow && column == _state.ActiveColumn)
         {
-            _state.ActiveRow = null;
-            _state.ActiveColumn = null;
-            _state.ActiveValue = null;
+            _state.Clear();
         }
         else
         {
@@ -71,12 +90,13 @@
 
     private void SetDigit(int value)
     {
+        PerformFeedback();
         if (!ActiveCell || ActiveGridCell.IsStatic)
         {
             return;
         }
 
-        stateService.SaveState(_grid.Grid);
+        StateService.SaveState(_grid.Grid);
 
         if (!_isNotesMode)
         {
@@ -84,25 +104,27 @@
             {
                 UpdateTempValuesWhenBigValueIsSet(value);
             }
-            ActiveGridCell.SetValue(value);
+            ActiveGridCell.ToggleValue(value);
             _state.ActiveValue = value;
         }
         else
         {
-            ActiveGridCell.AddTemp(value);
+            ActiveGridCell.ToggleTemp(value);
         }
+
         StateHasChanged();
     }
 
     private void UpdateTempValuesWhenBigValueIsSet(int value)
     {
-        stateService.SaveState(_grid.Grid);
+        StateService.SaveState(_grid.Grid);
         _grid.RemoveTempValues(_state.ActiveRow.Value, _state.ActiveColumn.Value, value);
     }
 
     private void Revert()
     {
-        if (stateService.TryGetState(out SudokuCell[,] oldCells))
+        PerformFeedback();
+        if (StateService.TryGetState(out SudokuCell[,] oldCells))
         {
             _grid.SetState(oldCells);
         }
@@ -110,21 +132,98 @@
 
     private void ChangeMode()
     {
+        PerformFeedback();
         _isNotesMode = !_isNotesMode;
     }
 
     private void Clear()
     {
+        PerformFeedback();
         if (!ActiveCell || ActiveGridCell.IsStatic || ActiveGridCell.IsEmpty)
         {
             return;
         }
 
-        stateService.SaveState(_grid.Grid);
+        StateService.SaveState(_grid.Grid);
         ActiveGridCell.Clear();
+    }
+
+    private async Task ConfirmToFillTempValues()
+    {
+        PerformFeedback();
+        var answer = await Application.Current.MainPage.DisplayAlert("Info", "Do you want to fill all notes?", "YES", "NO");
+        if (answer)
+        {
+            FillTempValues();
+        }
+    }
+
+    private async Task ConfitmClearAll()
+    {
+        PerformFeedback();
+        var answer = await Application.Current.MainPage.DisplayAlert("Info", "Do you want to clear all cells?", "YES", "NO");
+        if (answer)
+        {
+            ClearAll();
+        }
+    }
+
+    private void FillTempValues()
+    {
+        for (int row = 0; row < 9; row++)
+        {
+            for (int col = 0; col < 9; col++)
+            {
+                if (!_grid[row, col].Value.HasValue)
+                {
+                    var subSquare = SudokuHelper.SubSquares[row, col];
+                    for (int val = 1; val <= 9; val++)
+                    {
+                        bool valueExists = false;
+                        for (int i = 0; i < 9; i++)
+                        {
+                            for (int j = 0; j < 9; j++)
+                            {
+                                if (i == row || j == col || SudokuHelper.SubSquares[i, j] == subSquare)
+                                {
+                                    valueExists |= _grid[i, j].Value == val;
+                                }
+                            }
+                        }
+                        if (!valueExists)
+                        {
+                            _grid[row, col].AddTemp(val);
+                        }
+                    }
+                }
+            }
+        }
+        _state.Clear();
+        StateHasChanged();
+    }
+
+    private void ClearAll()
+    {
+        for (int i = 0; i < 9; i++)
+        {
+            for (int j = 0; j < 9; j++)
+            {
+                _grid[i, j].Clear();
+            }
+        }
+        _state.Clear();
+        StateHasChanged();
     }
 
     private SudokuCell ActiveGridCell => _grid[_state.ActiveRow.Value, _state.ActiveColumn.Value];
 
     private bool ActiveCell => _state.ActiveRow.HasValue && _state.ActiveColumn.HasValue;
+
+    private void PerformFeedback()
+    {
+        if (HapticFeedback.Default.IsSupported)
+        {
+            HapticFeedback.Default.Perform(HapticFeedbackType.Click);
+        }
+    }
 }
