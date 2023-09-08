@@ -1,79 +1,51 @@
-﻿@page "/"
+﻿@page "/{stay?}"
 @using ChainDoku.Models.Enums;
 @using ChainDoku.Services;
 @inject NavigationManager NavigationManager;
 @inject StateService StateService;
-<div class="main-content">
-    <header></header>
-    <div class="main-body">
-        <h1>Sudoku</h1>
-        <div class="main-actions">
-            @if (_lastStateExists)
-            {
-                <button class="btn btn-primary" @onclick="Continue">
-                    <span class="oi oi-play-circle" aria-hidden="true"></span> Continue
+<theme data-theme="@_theme">
+    <div class="main-content">
+        <header></header>
+        <div class="main-body">
+            <h1>Sudoku</h1>
+            <div class="main-actions">
+                <div>
+                    <label class="label">Theme</label>
+                    <select class="custom-select" aria-label="Default select example" @bind="Theme">
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                    </select>
+                </div>
+                @if (_lastStateExists)
+                {
+                    <button class="btn btn-primary" @onclick="Continue">
+                        <span class="oi oi-play-circle" aria-hidden="true"></span> Continue
+                    </button>
+                }
+                <div>
+                    <label class="label">Select Difficulty</label>
+                    <select class="custom-select" aria-label="Default select example" @bind="Diff">
+                        @foreach (var i in Enum.GetValues<Difficulty>())
+                        {
+                            <option value="@i">@(Enum.GetName<Difficulty>(i))</option>
+                        }
+                    </select>
+                </div>
+                <button class="btn btn-success" @onclick="NewGame">
+                    New Game
                 </button>
-            }
-            <div>
-                <label class="label">Select Difficulty</label>
-                <select class="custom-select" aria-label="Default select example" @bind="Diff">
-                    @foreach (var i in Enum.GetValues<Difficulty>())
-                    {
-                        <option value="@i">@(Enum.GetName<Difficulty>(i))</option>
-                    }
-                </select>
             </div>
-            <button class="btn btn-success" @onclick="NewGame">
-                New Game
-            </button>
         </div>
+        <footer>
+        </footer>
     </div>
-    <footer>
-    </footer>
-</div>
-<style>
-    .main-content {
-        display: flex;
-        height: 100%;
-        flex-direction: column;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    header {
-        display: flex;
-    }
-
-    main {
-        display: flex;
-    }
-
-    footer {
-        display: flex;
-    }
-
-    .main-body {
-        display: flex;
-        flex-direction: column;
-        flex: 1 1 0;
-        justify-content: space-evenly;
-        align-items: center;
-        width: 100%;
-    }
-
-    .main-actions {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-        width: 60%;
-    }
-
-        .main-actions > .btn {
-            height: 50px;
-        }
-</style>
+</theme>
 @code {
+    [Parameter]
+    public string Stay { get; set; }
+
     private const string DiffKey = nameof(DiffKey);
+    private const string ThemeKey = nameof(ThemeKey);
     private bool _lastStateExists;
     private Difficulty _difficulty;
 
@@ -86,18 +58,28 @@
         }
     }
 
+    private string _theme;
+
+    private string Theme
+    {
+        get => _theme;
+        set
+        {
+            _theme = value;
+            Preferences.Set(ThemeKey, value);
+        }
+    }
+
     protected override void OnInitialized()
     {
         base.OnInitialized();
         _lastStateExists = StateService.LastStateExists();
-        if (!Preferences.ContainsKey(DiffKey))
+
+        _difficulty = (Difficulty)Preferences.Get(DiffKey, 0);
+        _theme = Preferences.Get(ThemeKey, "light");
+        if (_lastStateExists && string.IsNullOrEmpty(Stay))
         {
-            _difficulty = Difficulty.Trinee;
-            Preferences.Set(DiffKey, (int)_difficulty);
-        }
-        else
-        {
-            _difficulty = (Difficulty)Preferences.Get(DiffKey, 0);
+            NavigationManager.NavigateTo($"/gamepage/1");
         }
     }
 

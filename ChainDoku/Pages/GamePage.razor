@@ -8,79 +8,102 @@
 @inject SudokuGridGenerator GridGenerator
 @inject StateService StateService
 @inject NavigationManager Navigation
-<h2 class="title">
-    Sudoku
-</h2>
-<div class="top-actions">
-    <div class="left-actions">
-        <button class="btn btn-secondary" @onclick="GoBack"><i class="oi oi-chevron-left" aria-hidden="true"></i></button>
-    </div>
-    <div class="right-actions">
-        <button class="btn btn-info" @onclick="ConfirmToFillTempValues"><i class="oi oi-beaker" aria-hidden="true"></i></button>
-        <button class="btn btn-secondary" @onclick="ConfitmClearAll"><i class="oi oi-ban" aria-hidden="true"></i></button>
-    </div>
-</div>
-<div class="game" @attributes="@attributes">
-    <div class="table-grid">
-        @for (var row = 0; row < 9; row++)
-        {
-            <div class="table-row">
-                @for (int col = 0; col < 9; col++)
-                {
-                    <SCell Cell="_grid[row,col]" Click="UpdateSelection" State="_state" />
-                }
-            </div>
-        }
-    </div>
-    <div class="actions button-actions">
-        <ActionButton Action="Revert" Disabled="false" Icon="oi-action-undo" Text="Revert" />
-        <ActionButton Action="Clear" Disabled="false" Icon="oi-trash" Text="Clear" />
-        <ActionButton Action="ChangeMode" Disabled="false" Icon="oi-pencil" Text="Notes" Class="@(_isNotesMode ? "notes" : "")" />
-        <ActionButton Action="Revert" Disabled="true" Icon="oi-info" Text="Help" />
-    </div>
-    <div class="actions digit-actions">
-        <button @onclick='() => SetDigit(1)'>1</button>
-        <button @onclick='() => SetDigit(2)'>2</button>
-        <button @onclick='() => SetDigit(3)'>3</button>
-        <button @onclick='() => SetDigit(4)'>4</button>
-        <button @onclick='() => SetDigit(5)'>5</button>
-        <button @onclick='() => SetDigit(6)'>6</button>
-        <button @onclick='() => SetDigit(7)'>7</button>
-        <button @onclick='() => SetDigit(8)'>8</button>
-        <button @onclick='() => SetDigit(9)'>9</button>
-    </div>
-</div>
 
+<temp class="theme" data-theme="@_theme">
+    <h2 class="title">
+        Sudoku
+    </h2>
+    <div class="top-actions">
+        <div class="left-actions">
+            <button class="btn btn-secondary" @onclick="GoBack"><i class="oi oi-chevron-left" aria-hidden="true"></i></button>
+        </div>
+        <div class="right-actions">
+            <button class="btn btn-info" @onclick="ConfirmToFillTempValues"><i class="oi oi-beaker" aria-hidden="true"></i></button>
+            <button class="btn btn-secondary" @onclick="ConfitmClearAll"><i class="oi oi-ban" aria-hidden="true"></i></button>
+        </div>
+    </div>
+    <div class="game">
+        <div class="table-grid">
+            @for (var row = 0; row < 9; row++)
+            {
+                <div class="table-row">
+                    @for (int col = 0; col < 9; col++)
+                    {
+                        <SCell Cell="_grid[row,col]" Click="UpdateSelection" State="_state" />
+                    }
+                </div>
+            }
+        </div>
+        <div class="actions button-actions">
+            <button @onclick='Revert'>
+                <i class="oi oi-action-undo" aria-hidden="true"></i>
+                <span>Revert</span>
+            </button>
+            <button @onclick='Clear'>
+                <i class="oi oi-trash" aria-hidden="true"></i>
+                <span>Clear</span>
+            </button>
+            <button class="@(_isNotesMode ? "notes" : "")" @onclick='ChangeMode'>
+                <i class="oi oi-pencil" aria-hidden="true"></i>
+                <span>Notes</span>
+            </button>
+            <button class="disabled">
+                <i class="oi oi-info" aria-hidden="true"></i>
+                <span>Help</span>
+            </button>
+        </div>
+        <div class="actions digit-actions">
+            @for (var i = 1; i < 10; i++)
+            {
+                var digit = i;
+                var isOver = IsDigitOver(digit);
+                if (isOver)
+                {
+                    <button class="disabled" disabled="disabled"></button>
+                }
+                else
+                {
+                    <button @onclick='() => SetDigit(digit)'>
+                        @digit
+                    </button>
+                }
+            }
+        </div>
+    </div>
+</temp>
 @code {
     [Parameter]
     public int Resume { get; set; }
-    private Difficulty _difficulty;
 
+    private const string ThemeKey = nameof(ThemeKey);
+    private Difficulty _difficulty;
+    private string _theme;
     private bool _isNotesMode = false;
     private SudokuGrid _grid;
     private GridState _state;
-    private Dictionary<string, object> attributes = new Dictionary<string, object>();
+
+    private bool IsDigitOver(int digit) => _grid.Grid.Cast<SudokuCell>().Count(c => c.Value == digit) >= 9;
 
     protected override async void OnInitialized()
     {
         base.OnInitialized();
+        await Init();
+    }
+
+    private async Task Init()
+    {
         _difficulty = (Difficulty)Preferences.Get("DiffKey", 0);
-        if (Resume == 1)
-        {
-            var lastGrid = await StateService.GetLastState();
-            _grid = new SudokuGrid(lastGrid);
-        }
-        else
-        {
-            _grid = GridGenerator.GenerateGrid(_difficulty);
-        }
+        _theme = Preferences.Get(ThemeKey, "light");
+        _grid = Resume == 1
+            ? new SudokuGrid(await StateService.GetLastState())
+            : GridGenerator.GenerateGrid(_difficulty);
         StateService.SaveState(_grid.Grid);
         _state = new GridState();
     }
 
     private void GoBack()
     {
-        Navigation.NavigateTo("/");
+        Navigation.NavigateTo($"/{true}");
     }
 
     private void UpdateSelection(int row, int column)
@@ -111,7 +134,17 @@
         {
             if (ActiveGridCell.Value != value)
             {
-                _grid.RemoveTempValues(_state.ActiveRow.Value, _state.ActiveColumn.Value, value);
+                var gridIndex = SudokuHelper.SubSquares[_state.ActiveRow.Value, _state.ActiveColumn.Value];
+                for (var i = 0; i < 9; i++)
+                {
+                    for (var j = 0; j < 9; j++)
+                    {
+                        if (!_grid.Grid[i, j].IsStatic && (i == _state.ActiveRow.Value || j == _state.ActiveColumn.Value || gridIndex == SudokuHelper.SubSquares[i, j]))
+                        {
+                            _grid.Grid[i, j].TemporaryValues.Remove(value);
+                        }
+                    }
+                }
             }
             ActiveGridCell.ToggleValue(value);
             _state.ActiveValue = value;
@@ -119,6 +152,7 @@
         else
         {
             ActiveGridCell.ToggleTemp(value);
+            _state.ActiveValue = null;
         }
         StateService.SaveState(_grid.Grid);
 
@@ -139,12 +173,6 @@
     {
         PerformFeedback();
         _isNotesMode = !_isNotesMode;
-        if (!attributes.ContainsKey("data-theme"))
-        {
-            attributes["data-theme"] = string.Empty;
-        }
-
-        attributes["data-theme"] = _isNotesMode ? "dark" : "light";
     }
 
     private void Clear()
