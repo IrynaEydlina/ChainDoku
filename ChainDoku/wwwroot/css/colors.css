@@ -1,0 +1,20 @@
+﻿:root {
+    --main-bg-color: yellow;
+    --grid-bg-color: red;
+    --border-color: black;
+    --font-color: black;
+    --non-static-color: dodgerblue;
+    --selected-bg-color: purple;
+    --selected-val-bg-color: lightgreen;
+    --selected-cell-bg-color: greenyellow;
+}
+[data-theme="dark"] {
+    --main-bg-color: yellow !important;
+    --grid-bg-color: red !important;
+    --border-color: black;
+    --font-color: black;
+    --non-static-color: dodgerblue;
+    --selected-bg-color: #b9e3c6;
+    --selected-val-bg-color: lightgreen;
+    --selected-cell-bg-color: greenyellow;
+}

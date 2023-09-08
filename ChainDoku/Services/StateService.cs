@@ -1,24 +1,30 @@
-﻿using System.Text.Json;
+﻿using ChainDoku.Models;
 
 namespace ChainDoku.Services;
 
-internal class StateService
+internal class StateService : IDisposable
 {
-    private readonly Stack<string> _states = new();
+    private const string StorageKey = "StateKey";
+    private readonly Stack<string> _history = new();
+    private readonly SerializeService _serializer;
 
-    public void SaveState<T>(T cells)
+    public StateService(SerializeService serializer)
     {
-        return;
-        // todo implement proper solution
-        var data = JsonSerializer.Serialize(cells);
-        _states.Push(data);
+        _serializer = serializer;
     }
 
-    public bool TryGetState<T>(out T cells)
+    public void SaveState<T>(T[,] cells) where T : class
     {
-        if (_states.TryPop(out var state))
+        var data = _serializer.Serialize2(cells);
+        _history.Push(data);
+        Preferences.Set(StorageKey, data);
+    }
+
+    public bool TryGetState<T>(out T[,] cells) where T : class
+    {
+        if (_history.TryPop(out var state))
         {
-            cells = JsonSerializer.Deserialize<T>(state);
+            cells = _serializer.Deserialize2<T>(state);
             return true;
         }
 
@@ -26,5 +32,22 @@ internal class StateService
         return false;
     }
 
-    public void Clear() => _states.Clear();
+    public async Task<SudokuCell[,]> GetLastState()
+    {
+        var value = Preferences.Get(StorageKey, null);
+
+        return _serializer.Deserialize2<SudokuCell>(value);
+    }
+
+    public bool LastStateExists() => Preferences.ContainsKey(StorageKey);
+
+    public void ClearState()
+    {
+        Preferences.Clear(StorageKey);
+    }
+
+    public void Dispose()
+    {
+        _history.Clear();
+    }
 }

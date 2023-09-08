@@ -1,22 +1,34 @@
 ﻿@page "/"
 @using ChainDoku.Models.Enums;
+@using ChainDoku.Services;
 @inject NavigationManager NavigationManager;
+@inject StateService StateService;
 <div class="main-content">
     <header></header>
-
     <div class="main-body">
         <h1>Sudoku</h1>
         <div class="main-actions">
-            <button class="btn btn-primary" @onclick="Continue">
-                <span class="oi oi-play-circle" aria-hidden="true"></span> Continue
-            </button>
+            @if (_lastStateExists)
+            {
+                <button class="btn btn-primary" @onclick="Continue">
+                    <span class="oi oi-play-circle" aria-hidden="true"></span> Continue
+                </button>
+            }
+            <div>
+                <label class="label">Select Difficulty</label>
+                <select class="custom-select" aria-label="Default select example" @bind="Diff">
+                    @foreach (var i in Enum.GetValues<Difficulty>())
+                    {
+                        <option value="@i">@(Enum.GetName<Difficulty>(i))</option>
+                    }
+                </select>
+            </div>
             <button class="btn btn-success" @onclick="NewGame">
                 New Game
             </button>
         </div>
     </div>
     <footer>
-        
     </footer>
 </div>
 <style>
@@ -55,22 +67,48 @@
         gap: 20px;
         width: 60%;
     }
-    .main-actions>.btn {
-        height: 50px;
-    }
+
+        .main-actions > .btn {
+            height: 50px;
+        }
 </style>
 @code {
+    private const string DiffKey = nameof(DiffKey);
+    private bool _lastStateExists;
+    private Difficulty _difficulty;
+
+    private Difficulty Diff
+    {
+        get => _difficulty; set
+        {
+            _difficulty = value;
+            Preferences.Set(DiffKey, (int)_difficulty);
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        _lastStateExists = StateService.LastStateExists();
+        if (!Preferences.ContainsKey(DiffKey))
+        {
+            _difficulty = Difficulty.Trinee;
+            Preferences.Set(DiffKey, (int)_difficulty);
+        }
+        else
+        {
+            _difficulty = (Difficulty)Preferences.Get(DiffKey, 0);
+        }
+    }
 
     private void Continue()
     {
-        Guid gameId = Guid.NewGuid();
-        NavigationManager.NavigateTo($"/gamepage/{gameId}");
+        NavigationManager.NavigateTo($"/gamepage/1");
     }
 
     private void NewGame()
     {
-        NavigationManager.NavigateTo($"/gamepage");
-
+        StateService.ClearState();
+        NavigationManager.NavigateTo($"/gamepage/0");
     }
-
 }

@@ -72,4 +72,8 @@
       <Folder Include="wwwroot\js\bootstrap\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Include="wwwroot\css\colors.css" />
+    </ItemGroup>
+
 </Project>

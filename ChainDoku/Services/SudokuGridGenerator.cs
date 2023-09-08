@@ -5,19 +5,15 @@ namespace ChainDoku.Services;
 
 internal class SudokuGridGenerator
 {
-    public SudokuGrid GenerateGrid(Difficulty difficulty = Difficulty.Trinee)
+    public SudokuGrid GenerateGrid(Difficulty difficulty = Difficulty.Middle)
     {
-        var cells = new List<SudokuCell>();
-        var tempGrid = GenerateSudoku();
-        for (int col = 0; col < 9; col++)
-            for (int row = 0; row < 9; row++)
-            {
-                bool hasValue = tempGrid[row, col] != 0;
-                cells.Add(new SudokuCell(row, col, hasValue ? tempGrid[row, col] : null, hasValue));
-            }
+        var cells = new SudokuCell[9, 9];
+        var tempGrid = GenerateSudoku(ToDifficulty(difficulty));
+        for (int row = 0; row < 9; row++)
+            for (int col = 0; col < 9; col++)
+                cells[row, col] = new SudokuCell(row, col, tempGrid[row, col]);
 
-        var grid = new SudokuGrid(cells);
-        return grid;
+        return new SudokuGrid(cells);
     }
 
     static int[,] GenerateSudoku(int difficulty = 30)
@@ -128,5 +124,18 @@ internal class SudokuGridGenerator
         }
 
         return true;
+    }
+
+    static int ToDifficulty(Difficulty difficulty)
+    {
+        return difficulty switch
+        {
+            Difficulty.Junior => 80,
+            Difficulty.Trinee => 60,
+            Difficulty.Middle => 45,
+            Difficulty.Senior => 30,
+            Difficulty.Techlead => 20,
+            _ => 1
+        };
     }
 }
