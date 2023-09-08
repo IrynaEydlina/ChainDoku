@@ -1,20 +1,22 @@
 ﻿:root {
-    --main-bg-color: yellow;
-    --grid-bg-color: red;
-    --border-color: black;
-    --font-color: black;
-    --non-static-color: dodgerblue;
-    --selected-bg-color: purple;
-    --selected-val-bg-color: lightgreen;
-    --selected-cell-bg-color: greenyellow;
+    --main-bg-color: white;
+    --grid-bg-color: white;
+    --border-color: #becbdc;
+    --font-color: #344861;
+    --non-static-color: #0072e3;
+    --selected-bg-color: #e2ebf3;
+    --selected-val-bg-color: #c3d7ea;
+    --selected-cell-bg-color: #bbdefb;
 }
 [data-theme="dark"] {
-    --main-bg-color: yellow !important;
-    --grid-bg-color: red !important;
-    --border-color: black;
-    --font-color: black;
-    --non-static-color: dodgerblue;
-    --selected-bg-color: #b9e3c6;
-    --selected-val-bg-color: lightgreen;
-    --selected-cell-bg-color: greenyellow;
+    color: #6d7080;
+    --font-color: #6d7080;
+    --main-bg-color: #181715;
+    --grid-bg-color: #292a30;
+    --border-color: #6d7080;
+    --non-static-color: #7ab2ff;
+    --selected-bg-color: #23344a;
+    --selected-val-bg-color: #34455b;
+    --selected-cell-bg-color: #364b73;
 }
+
