@@ -1,6 +1,29 @@
-﻿.header {
-    justify-content: center;
+﻿.title {
     display: flex;
+    justify-content: center;
+    align-content: center;
+    text-align: center;
+    width: 95vw;
+}
+
+.top-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin: auto;
+    width: 95vw;
+    padding-bottom: 10px;
+}
+
+.left-actions {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.right-actions {
+    display: flex;
+    justify-content: end;
+    gap: 10px;
 }
 
 .game {
@@ -95,7 +118,6 @@
 
 .bold {
     font-weight: bold;
-    text-decoration: underline;
 }
 
 .selected {
@@ -133,7 +155,7 @@
     display: flex;
     flex: 0 1 10vw;
     flex-direction: column;
-    gap: 30px;
+    gap: 15px;
     justify-content: center;
     align-items: center;
     width: 10vw;

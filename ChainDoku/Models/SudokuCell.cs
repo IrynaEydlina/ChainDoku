@@ -19,7 +19,7 @@ public class SudokuCell
 
     public bool IsEmpty => !Value.HasValue && !TemporaryValues.Any();
 
-    public void AddTemp(int value)
+    public void ToggleTemp(int value)
     {
         if (IsStatic)
         {
@@ -37,7 +37,18 @@ public class SudokuCell
         }
     }
 
-    public void SetValue(int value)
+    public void AddTemp(int value)
+    {
+        if (IsStatic)
+        {
+            return;
+        }
+
+        Value = null;
+        TemporaryValues.Add(value);
+    }
+
+    public void ToggleValue(int value)
     {
         if (IsStatic)
         {
