@@ -1,22 +1,29 @@
-﻿namespace ChainDoku.Models;
+﻿using System.Text.Json.Serialization;
+
+namespace ChainDoku.Models;
 
 public class SudokuCell
 {
-    public SudokuCell(int row, int column, int? value, bool isStatic)
+    public SudokuCell(int row, int column, int? value)
     {
         Row = row;
         Column = column;
-        Value = value;
-        IsStatic = isStatic;
-        TemporaryValues = isStatic ? null : new();
+        Value = value.HasValue && value != 0 ? value : null;
+        IsStatic = Value.HasValue;
+        TemporaryValues = IsStatic ? null : new();
     }
-
+    [JsonPropertyName("r")]
     public int Row { get; }
+    [JsonPropertyName("c")]
     public int Column { get; }
+    [JsonPropertyName("v")]
     public int? Value { get; private set; }
+    [JsonPropertyName("s")]
     public bool IsStatic { get; init; }
+    [JsonPropertyName("t")]
     public HashSet<int> TemporaryValues { get; init; }
 
+    [JsonIgnore]
     public bool IsEmpty => !Value.HasValue && !TemporaryValues.Any();
 
     public void ToggleTemp(int value)
@@ -37,15 +44,17 @@ public class SudokuCell
         }
     }
 
-    public void AddTemp(int value)
+    public bool AddTemp(int value)
     {
         if (IsStatic)
         {
-            return;
+            return true;
         }
 
+        var result = Value.HasValue || !TemporaryValues.Contains(value);
         Value = null;
         TemporaryValues.Add(value);
+        return result;
     }
 
     public void ToggleValue(int value)
@@ -59,15 +68,17 @@ public class SudokuCell
         ClearTempValues();
     }
 
-    public void Clear()
+    public bool Clear()
     {
         if (IsStatic)
         {
-            return;
+            return false;
         }
 
+        var result = Value.HasValue || TemporaryValues.Any();
         Value = null;
         ClearTempValues();
+        return result;
     }
 
     private void ClearTempValues()

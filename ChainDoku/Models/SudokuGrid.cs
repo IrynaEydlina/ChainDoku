@@ -4,18 +4,6 @@ public class SudokuGrid
 {
     private const int Size = 9;
     public int[,] SubSquares { get; private set; }
-    public SudokuGrid(List<SudokuCell> cells)
-    {
-        Grid = new SudokuCell[Size, Size];
-        for (int i = 0; i < Size; i++)
-        {
-            for (int j = 0; j < Size; j++)
-            {
-                Grid[i, j] = cells.First(c => c.Row == i && c.Column == j);
-            }
-        }
-        Init();
-    }
 
     public SudokuGrid(SudokuCell[,] grid)
     {
@@ -48,7 +36,7 @@ public class SudokuGrid
         {
             for (var j = 0; j < Size; j++)
             {
-                if (!Grid[i,j].IsStatic && (i == row || j == column || gridIndex == SubSquares[i, j]))
+                if (!Grid[i, j].IsStatic && (i == row || j == column || gridIndex == SubSquares[i, j]))
                 {
                     Grid[i, j].TemporaryValues.Remove(value);
                 }

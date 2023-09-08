@@ -1,13 +1,13 @@
-﻿@page "/gamepage/{gameId:guid?}"
+﻿@page "/gamepage/{resume:int}"
 @using ChainDoku.Components
 @using ChainDoku.Models;
+@using ChainDoku.Models.Enums;
 @using ChainDoku.Services;
 @using System;
-@using System.Diagnostics;
+
 @inject SudokuGridGenerator GridGenerator
 @inject StateService StateService
 @inject NavigationManager Navigation
-
 <h2 class="title">
     Sudoku
 </h2>
@@ -20,7 +20,7 @@
         <button class="btn btn-secondary" @onclick="ConfitmClearAll"><i class="oi oi-ban" aria-hidden="true"></i></button>
     </div>
 </div>
-<div class="game">
+<div class="game" @attributes="@attributes">
     <div class="table-grid">
         @for (var row = 0; row < 9; row++)
         {
@@ -33,7 +33,7 @@
         }
     </div>
     <div class="actions button-actions">
-        <ActionButton Action="Revert" Disabled="true" Icon="oi-action-undo" Text="Revert" />
+        <ActionButton Action="Revert" Disabled="false" Icon="oi-action-undo" Text="Revert" />
         <ActionButton Action="Clear" Disabled="false" Icon="oi-trash" Text="Clear" />
         <ActionButton Action="ChangeMode" Disabled="false" Icon="oi-pencil" Text="Notes" Class="@(_isNotesMode ? "notes" : "")" />
         <ActionButton Action="Revert" Disabled="true" Icon="oi-info" Text="Help" />
@@ -53,18 +53,29 @@
 
 @code {
     [Parameter]
-    public Guid? GameId { get; set; }
+    public int Resume { get; set; }
+    private Difficulty _difficulty;
 
     private bool _isNotesMode = false;
     private SudokuGrid _grid;
     private GridState _state;
+    private Dictionary<string, object> attributes = new Dictionary<string, object>();
 
-    protected override void OnInitialized()
+    protected override async void OnInitialized()
     {
         base.OnInitialized();
-        _grid = GridGenerator.GenerateGrid();
+        _difficulty = (Difficulty)Preferences.Get("DiffKey", 0);
+        if (Resume == 1)
+        {
+            var lastGrid = await StateService.GetLastState();
+            _grid = new SudokuGrid(lastGrid);
+        }
+        else
+        {
+            _grid = GridGenerator.GenerateGrid(_difficulty);
+        }
+        StateService.SaveState(_grid.Grid);
         _state = new GridState();
-        Debug.WriteLine($"Is New Game : {GameId}");
     }
 
     private void GoBack()
@@ -96,13 +107,11 @@
             return;
         }
 
-        StateService.SaveState(_grid.Grid);
-
         if (!_isNotesMode)
         {
             if (ActiveGridCell.Value != value)
             {
-                UpdateTempValuesWhenBigValueIsSet(value);
+                _grid.RemoveTempValues(_state.ActiveRow.Value, _state.ActiveColumn.Value, value);
             }
             ActiveGridCell.ToggleValue(value);
             _state.ActiveValue = value;
@@ -111,14 +120,9 @@
         {
             ActiveGridCell.ToggleTemp(value);
         }
+        StateService.SaveState(_grid.Grid);
 
         StateHasChanged();
-    }
-
-    private void UpdateTempValuesWhenBigValueIsSet(int value)
-    {
-        StateService.SaveState(_grid.Grid);
-        _grid.RemoveTempValues(_state.ActiveRow.Value, _state.ActiveColumn.Value, value);
     }
 
     private void Revert()
@@ -127,6 +131,7 @@
         if (StateService.TryGetState(out SudokuCell[,] oldCells))
         {
             _grid.SetState(oldCells);
+            _state.ActiveValue = ActiveCell ? ActiveGridCell.Value : null;
         }
     }
 
@@ -134,6 +139,12 @@
     {
         PerformFeedback();
         _isNotesMode = !_isNotesMode;
+        if (!attributes.ContainsKey("data-theme"))
+        {
+            attributes["data-theme"] = string.Empty;
+        }
+
+        attributes["data-theme"] = _isNotesMode ? "dark" : "light";
     }
 
     private void Clear()
@@ -144,8 +155,8 @@
             return;
         }
 
-        StateService.SaveState(_grid.Grid);
         ActiveGridCell.Clear();
+        SaveState();
     }
 
     private async Task ConfirmToFillTempValues()
@@ -155,6 +166,7 @@
         if (answer)
         {
             FillTempValues();
+            SaveState();
         }
     }
 
@@ -165,6 +177,7 @@
         if (answer)
         {
             ClearAll();
+            SaveState();
         }
     }
 
@@ -211,8 +224,14 @@
                 _grid[i, j].Clear();
             }
         }
+
         _state.Clear();
         StateHasChanged();
+    }
+
+    private void SaveState()
+    {
+        StateService.SaveState(_grid.Grid);
     }
 
     private SudokuCell ActiveGridCell => _grid[_state.ActiveRow.Value, _state.ActiveColumn.Value];

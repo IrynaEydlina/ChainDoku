@@ -4,6 +4,9 @@
     align-content: center;
     text-align: center;
     width: 95vw;
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10 and IE 11 */
+    user-select: none; /* Standard syntax */
 }
 
 .top-actions {
@@ -14,6 +17,11 @@
     width: 95vw;
     padding-bottom: 10px;
 }
+    .top-actions button {
+        background-color: unset;
+        color: var(--font-color);
+        border-color: var(--border-color: black);
+    }
 
 .left-actions {
     display: flex;
@@ -31,15 +39,15 @@
     flex-direction: column;
     gap: 20px;
     margin: auto;
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10 and IE 11 */
+    user-select: none; /* Standard syntax */
 }
 
 .table-grid {
     display: flex;
     flex-direction: column;
-    -webkit-user-select: none; /* Safari */
-    -ms-user-select: none; /* IE 10 and IE 11 */
-    user-select: none; /* Standard syntax */
-    background-color: #f1f2eb;
+    background-color: var(--grid-bg-color);
     width: 95vw;
     margin: auto;
 }
@@ -50,20 +58,17 @@
 }
 
     .table-row:first-child {
-        border-top: 2px solid black;
+        border-top: 2px solid var(--border-color);
     }
 
     .table-row:nth-child(3n+3) {
-        border-bottom: 2px solid black;
+        border-bottom: 2px solid var(--border-color);
     }
 
 .table-cell {
-    border-width: 1px;
-    border-style: solid;
-    border-color: black;
+    border: 1px solid var(--border-color);
     width: 10.5vw;
     height: 10.5vw;
-    vertical-align: middle;
     text-align: center;
     display: flex;
     align-items: center;
@@ -76,11 +81,11 @@
 }
 
     .table-cell:nth-child(3n+3) {
-        border-right: 2px solid black;
+        border-right: 2px solid var(--border-color);
     }
 
     .table-cell:first-child {
-        border-left: 2px solid black;
+        border-left: 2px solid var(--border-color);
     }
 
 .sub-grid {
@@ -88,7 +93,7 @@
     flex-direction: column;
     width: 100%;
     height: 100%;
-    color: black;
+    color: var(--font-color);
     font-size: 3vw;
     line-height: 3vw;
 }
@@ -109,11 +114,11 @@
 }
 
 .static-value {
-    color: #272932;
+    color: var(--font-color);
 }
 
 .non-static-value {
-    color: dodgerblue;
+    color: var(--non-static-color);
 }
 
 .bold {
@@ -121,19 +126,19 @@
 }
 
 .selected {
-    background-color: #b9e3c6;
+    background-color: var(--selected-bg-color);
 }
 
 .selected-value {
-    background-color: lightgreen !important;
+    background-color: var(--selected-val-bg-color) !important;
 }
 
 .selected-cell {
-    background-color: greenyellow !important;
+    background-color: var(--selected-cell-bg-color) !important;
 }
 
 .notes {
-    color: dodgerblue;
+    color: var(--non-static-color);
 }
 
 .actions {
@@ -147,7 +152,7 @@
 }
 
     .actions > button:active {
-        background-color: aliceblue;
+        background-color: var(--selected-bg-color);
         border-radius: 10px;
     }
 
@@ -184,7 +189,7 @@
 
     .digit-actions > button {
         font-size: 10vw;
-        color: darkgreen;
+        color: var(--font-color);
         cursor: pointer;
         border: unset;
         background-color: inherit;
