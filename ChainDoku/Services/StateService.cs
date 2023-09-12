@@ -1,6 +1,4 @@
-﻿using ChainDoku.Models;
-
-namespace ChainDoku.Services;
+﻿namespace ChainDoku.Services;
 
 internal class StateService : IDisposable
 {
@@ -32,18 +30,18 @@ internal class StateService : IDisposable
         return false;
     }
 
-    public async Task<SudokuCell[,]> GetLastState()
+    public Models.Cell[,] GetLastState()
     {
         var value = Preferences.Get(StorageKey, null);
 
-        return _serializer.Deserialize2<SudokuCell>(value);
+        return _serializer.Deserialize2<Models.Cell>(value);
     }
 
     public bool LastStateExists() => Preferences.ContainsKey(StorageKey);
 
     public void ClearState()
     {
-        Preferences.Clear(StorageKey);
+        Preferences.Remove(StorageKey);
     }
 
     public void Dispose()

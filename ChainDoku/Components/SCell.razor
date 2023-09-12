@@ -1,15 +1,15 @@
-﻿@using ChainDoku.Models;
+﻿@using Models;
 @using System.Text;
 @using ChainDoku.Services;
 
 <button class="table-cell @GetClasses()" @onclick='() => Click(Cell.Row, Cell.Column)'>
-    @if (Cell.Value.HasValue || Cell.IsEmpty)
+    @if (Cell.HasValue || Cell.IsEmpty)
     {
-        @(Cell.Value?.ToString() ?? string.Empty)
+        @(Cell.HasValue ? Cell.Value : string.Empty)
     }
     else
     {
-        <MiniGrid Values="Cell.TemporaryValues" ActiveValue="State.ActiveValue" />
+        <MiniGrid Values="Cell.Candidates" ActiveValue="State.ActiveValue" />
     }
 </button>
 @code {
@@ -17,7 +17,7 @@
     public GridState State { get; set; }
     
     [Parameter]
-    public SudokuCell Cell { get; set; }
+    public Cell Cell { get; set; }
 
     [Parameter]
     public Action<int, int> Click { get; set; }
@@ -43,15 +43,18 @@
         {
             sb.Append(" selected-cell");
         }
-        else if (Cell.Row == State.ActiveRow || Cell.Column == State.ActiveColumn || SudokuHelper.SubSquares[State.ActiveRow.Value, State.ActiveColumn.Value] == SudokuHelper.SubSquares[Cell.Row, Cell.Column])
+        else if (Cell.Row == State.ActiveRow || Cell.Column == State.ActiveColumn || State.Block == Cell.Block)
         {
             sb.Append(" selected");
         }
-        else if (State.ActiveValue.HasValue && Cell.Value == State.ActiveValue)
+        else if (State.HasValue && Cell.Value == State.ActiveValue)
         {
             sb.Append(" selected-value");
         }
 
         return sb.ToString();
     }
+
+    private int GetBlock(int row, int column) => row / 3 * 3 + column / 3;
+
 }

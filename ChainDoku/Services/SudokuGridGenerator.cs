@@ -1,5 +1,5 @@
-﻿using ChainDoku.Models;
-using ChainDoku.Models.Enums;
+﻿using Models;
+using Models.Enums;
 
 namespace ChainDoku.Services;
 
@@ -7,11 +7,11 @@ internal class SudokuGridGenerator
 {
     public SudokuGrid GenerateGrid(Difficulty difficulty = Difficulty.Middle)
     {
-        var cells = new SudokuCell[9, 9];
+        var cells = new Models.Cell[9, 9];
         var tempGrid = GenerateSudoku(ToDifficulty(difficulty));
         for (int row = 0; row < 9; row++)
             for (int col = 0; col < 9; col++)
-                cells[row, col] = new SudokuCell(row, col, tempGrid[row, col]);
+                cells[row, col] = new Models.Cell(row, col, tempGrid[row, col]);
 
         return new SudokuGrid(cells);
     }

@@ -68,12 +68,18 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Folder Include="Models\" />
       <Folder Include="wwwroot\css\bootstrap\" />
       <Folder Include="wwwroot\js\bootstrap\" />
     </ItemGroup>
 
     <ItemGroup>
       <None Include="wwwroot\css\colors.css" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Models\Models.csproj" />
+      <ProjectReference Include="..\Solver\Solver.csproj" />
     </ItemGroup>
 
 </Project>
