@@ -1,13 +1,15 @@
 ﻿@page "/gamepage/{resume:int}"
 @using ChainDoku.Components
-@using ChainDoku.Models;
-@using ChainDoku.Models.Enums;
+@using Models;
+@using Models.Enums;
 @using ChainDoku.Services;
 @using System;
+@using Solver;
 
 @inject SudokuGridGenerator GridGenerator
 @inject StateService StateService
 @inject NavigationManager Navigation
+@inject SolverService SolverService;
 
 <temp class="theme" data-theme="@_theme">
     <h2 class="title">
@@ -47,7 +49,7 @@
                 <i class="oi oi-pencil" aria-hidden="true"></i>
                 <span>Notes</span>
             </button>
-            <button class="disabled">
+            <button @onclick='SolveOne'>
                 <i class="oi oi-info" aria-hidden="true"></i>
                 <span>Help</span>
             </button>
@@ -76,26 +78,27 @@
     public int Resume { get; set; }
 
     private const string ThemeKey = nameof(ThemeKey);
+    private const string DiffKey = nameof(DiffKey);
     private Difficulty _difficulty;
     private string _theme;
     private bool _isNotesMode = false;
     private SudokuGrid _grid;
     private GridState _state;
 
-    private bool IsDigitOver(int digit) => _grid.Grid.Cast<SudokuCell>().Count(c => c.Value == digit) >= 9;
+    private bool IsDigitOver(int digit) => _grid.Grid.Cast<Cell>().Count(c => c.Value == digit) >= 9;
 
-    protected override async void OnInitialized()
+    protected override void OnInitialized()
     {
         base.OnInitialized();
-        await Init();
+        Init();
     }
 
-    private async Task Init()
+    private void Init()
     {
         _difficulty = (Difficulty)Preferences.Get("DiffKey", 0);
         _theme = Preferences.Get(ThemeKey, "light");
         _grid = Resume == 1
-            ? new SudokuGrid(await StateService.GetLastState())
+            ? new SudokuGrid(StateService.GetLastState())
             : GridGenerator.GenerateGrid(_difficulty);
         StateService.SaveState(_grid.Grid);
         _state = new GridState();
@@ -134,16 +137,10 @@
         {
             if (ActiveGridCell.Value != value)
             {
-                var gridIndex = SudokuHelper.SubSquares[_state.ActiveRow.Value, _state.ActiveColumn.Value];
-                for (var i = 0; i < 9; i++)
+                var block = _state.Block;
+                foreach (var cell in _grid.Where(c => !c.IsStatic && (c.Row == _state.ActiveRow.Value || c.Column == _state.ActiveColumn.Value || c.Block == block)))
                 {
-                    for (var j = 0; j < 9; j++)
-                    {
-                        if (!_grid.Grid[i, j].IsStatic && (i == _state.ActiveRow.Value || j == _state.ActiveColumn.Value || gridIndex == SudokuHelper.SubSquares[i, j]))
-                        {
-                            _grid.Grid[i, j].TemporaryValues.Remove(value);
-                        }
-                    }
+                    cell.Candidates.Remove(value);
                 }
             }
             ActiveGridCell.ToggleValue(value);
@@ -161,12 +158,18 @@
 
     private void Revert()
     {
-        PerformFeedback();
-        if (StateService.TryGetState(out SudokuCell[,] oldCells))
+        if (StateService.TryGetState(out Cell[,] oldCells))
         {
             _grid.SetState(oldCells);
-            _state.ActiveValue = ActiveCell ? ActiveGridCell.Value : null;
+            _state.ActiveValue = ActiveCell && ActiveGridCell.HasValue ? ActiveGridCell.Value : null;
         }
+    }
+
+    private void SolveOne()
+    {
+        PerformFeedback();
+
+        SolverService.TrySolve(_grid);
     }
 
     private void ChangeMode()
@@ -211,31 +214,13 @@
 
     private void FillTempValues()
     {
-        for (int row = 0; row < 9; row++)
+        foreach(var cell in _grid.Where(c => !c.HasValue))
         {
-            for (int col = 0; col < 9; col++)
+            for (int val = 1; val <= 9; val++)
             {
-                if (!_grid[row, col].Value.HasValue)
+                if (!_grid.Any(c => c.SameRegion(cell) && c.Value == val))
                 {
-                    var subSquare = SudokuHelper.SubSquares[row, col];
-                    for (int val = 1; val <= 9; val++)
-                    {
-                        bool valueExists = false;
-                        for (int i = 0; i < 9; i++)
-                        {
-                            for (int j = 0; j < 9; j++)
-                            {
-                                if (i == row || j == col || SudokuHelper.SubSquares[i, j] == subSquare)
-                                {
-                                    valueExists |= _grid[i, j].Value == val;
-                                }
-                            }
-                        }
-                        if (!valueExists)
-                        {
-                            _grid[row, col].AddTemp(val);
-                        }
-                    }
+                    cell.AddTemp(val);
                 }
             }
         }
@@ -245,12 +230,9 @@
 
     private void ClearAll()
     {
-        for (int i = 0; i < 9; i++)
+        foreach (var cell in _grid)
         {
-            for (int j = 0; j < 9; j++)
-            {
-                _grid[i, j].Clear();
-            }
+            cell.Clear();
         }
 
         _state.Clear();
@@ -262,7 +244,7 @@
         StateService.SaveState(_grid.Grid);
     }
 
-    private SudokuCell ActiveGridCell => _grid[_state.ActiveRow.Value, _state.ActiveColumn.Value];
+    private Cell ActiveGridCell => _grid[_state.ActiveRow.Value, _state.ActiveColumn.Value];
 
     private bool ActiveCell => _state.ActiveRow.HasValue && _state.ActiveColumn.HasValue;
 

@@ -1,5 +1,5 @@
 ﻿@page "/{stay?}"
-@using ChainDoku.Models.Enums;
+@using Models.Enums;
 @using ChainDoku.Services;
 @inject NavigationManager NavigationManager;
 @inject StateService StateService;
@@ -73,6 +73,11 @@
     protected override void OnInitialized()
     {
         base.OnInitialized();
+
+        // TODO: remove when dev state is done because of not finaly determined structure of saving cells
+        // may be splitted into values and candidates preferences to low amount of memory
+        StateService.ClearState();
+
         _lastStateExists = StateService.LastStateExists();
 
         _difficulty = (Difficulty)Preferences.Get(DiffKey, 0);

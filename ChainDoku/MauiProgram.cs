@@ -1,5 +1,6 @@
 ﻿using ChainDoku.Services;
 using Microsoft.Extensions.Logging;
+using Solver;
 
 namespace ChainDoku
 {
@@ -26,6 +27,7 @@ namespace ChainDoku
             builder.Services.AddSingleton<SudokuGridGenerator>();
             builder.Services.AddSingleton<SettingsService>();
             builder.Services.AddScoped<SerializeService>();
+            builder.Services.AddSingleton<SolverService>();
 
             var app = builder.Build();
 

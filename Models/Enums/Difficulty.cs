@@ -1,4 +1,4 @@
-﻿namespace ChainDoku.Models.Enums;
+﻿namespace Models.Enums;
 
 public enum Difficulty
 {
