@@ -1,9 +1,6 @@
-﻿using Blazorise;
-using ChainDoku.Services;
+﻿using ChainDoku.Services;
 using Microsoft.Extensions.Logging;
 using Solver;
-using Blazorise.Bootstrap;
-using Blazorise.Icons.FontAwesome;
 
 namespace ChainDoku
 {
@@ -31,12 +28,7 @@ namespace ChainDoku
             builder.Services.AddSingleton<SettingsService>();
             builder.Services.AddScoped<SerializeService>();
             builder.Services.AddSingleton<SolverService>();
-            builder.Services.AddBlazorise(options =>
-            {
-                options.Immediate = true;
-            })
-            .AddBootstrapProviders()
-            .AddFontAwesomeIcons();
+
             var app = builder.Build();
 
             // HACK: Set KeepScreenOn after some time app initialized

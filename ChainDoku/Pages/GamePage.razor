@@ -11,68 +11,66 @@
 @inject NavigationManager Navigation
 @inject SolverService SolverService;
 
-<temp class="theme" data-theme="@_theme">
-    <h2 class="title">
-        Sudoku
-    </h2>
-    <div class="top-actions">
-        <div class="left-actions">
-            <button class="btn btn-secondary" @onclick="GoBack"><i class="oi oi-chevron-left" aria-hidden="true"></i></button>
-        </div>
-        <div class="right-actions">
-            <button class="btn btn-info" @onclick="ConfirmToFillTempValues"><i class="oi oi-beaker" aria-hidden="true"></i></button>
-            <button class="btn btn-secondary" @onclick="ConfitmClearAll"><i class="oi oi-ban" aria-hidden="true"></i></button>
-        </div>
+<h2 class="title">
+    Sudoku
+</h2>
+<div class="top-actions">
+    <div class="left-actions">
+        <button @onclick="GoBack"><i class="fas fa-chevron-left"></i></button>
     </div>
-    <div class="game">
-        <div class="table-grid">
-            @for (var row = 0; row < 9; row++)
-            {
-                <div class="table-row">
-                    @for (int col = 0; col < 9; col++)
-                    {
-                        <SCell Cell="_grid[row,col]" Click="UpdateSelection" State="_state" />
-                    }
-                </div>
-            }
-        </div>
-        <div class="actions button-actions">
-            <button @onclick='Revert'>
-                <i class="oi oi-action-undo" aria-hidden="true"></i>
-                <span>Revert</span>
-            </button>
-            <button @onclick='Clear'>
-                <i class="oi oi-trash" aria-hidden="true"></i>
-                <span>Clear</span>
-            </button>
-            <button class="@(_isNotesMode ? "notes" : "")" @onclick='ChangeMode'>
-                <i class="oi oi-pencil" aria-hidden="true"></i>
-                <span>Notes</span>
-            </button>
-            <button @onclick='SolveOne'>
-                <i class="oi oi-info" aria-hidden="true"></i>
-                <span>Help</span>
-            </button>
-        </div>
-        <div class="actions digit-actions">
-            @for (var i = 1; i < 10; i++)
-            {
-                var digit = i;
-                var isOver = IsDigitOver(digit);
-                if (isOver)
-                {
-                    <button class="disabled" disabled="disabled"></button>
-                }
-                else
-                {
-                    <button @onclick='() => SetDigit(digit)'>
-                        @digit
-                    </button>
-                }
-            }
-        </div>
+    <div class="right-actions">
+        <button @onclick="ConfirmToFillTempValues"><i class="fas fa-magic"></i></button>
+        <button @onclick="ConfitmClearAll"><i class="fas fa-broom"></i></button>
     </div>
-</temp>
+</div>
+<div class="game">
+    <div class="table-grid">
+        @for (var row = 0; row < 9; row++)
+        {
+            <div class="table-row">
+                @for (int col = 0; col < 9; col++)
+                {
+                    <SCell Cell="_grid[row,col]" Click="UpdateSelection" State="_state" />
+                }
+            </div>
+        }
+    </div>
+    <div class="actions button-actions">
+        <button disabled class="disabled" @onclick="Revert">
+            <i class="fas fa-undo"></i>
+            <span>Undo</span>
+        </button>
+        <button @onclick="Clear">
+            <i class="fas fa-eraser"></i>
+            <span>Clear</span>
+        </button>
+        <button @onclick="ChangeMode">
+            <i class="@(_isNotesMode ? "notes" : "") far fa-edit"></i>
+            <span>Notes</span>
+        </button>
+        <button @onclick="SolveOne">
+            <i class="far fa-lightbulb"></i>
+            <span>Help</span>
+        </button>
+    </div>
+    <div class="actions digit-actions">
+        @for (var i = 1; i < 10; i++)
+        {
+            var digit = i;
+            var isOver = IsDigitOver(digit);
+            if (isOver)
+            {
+                <button class="disabled" disabled></button>
+            }
+            else
+            {
+                <button @onclick='() => SetDigit(digit)'>
+                    @digit
+                </button>
+            }
+        }
+    </div>
+</div>
 @code {
     [Parameter]
     public int Resume { get; set; }
