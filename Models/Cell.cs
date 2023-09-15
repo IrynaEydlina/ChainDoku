@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+﻿using Models.Helpers;
 using System.Text.Json.Serialization;
 
 namespace Models;
@@ -16,11 +16,13 @@ public sealed class Cell
         Column = column;
         Value = value;
         IsStatic = value != 0;
+        Block = GridHelper.SubGrid[Row, Column];
     }
     internal Cell(Cell cell)
     {
         Row = cell.Row;
         Column = cell.Column;
+        Block = GridHelper.SubGrid[Row, Column];
         Value = cell.Value;
         IsStatic = cell.IsStatic;
         Candidates = cell.Candidates.ToHashSet();
@@ -31,7 +33,7 @@ public sealed class Cell
     public bool IsStatic { get; set; }
     public HashSet<int> Candidates { get; set; } = new HashSet<int>();
     public HashSet<int> InternalCandidates { get; set; } = new();
-    public int Block => Row / 3 * 3 + Column / 3;
+    public int Block { get; set; }
 
     public bool IsEmpty => !HasValue && !Candidates.Any();
 

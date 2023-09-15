@@ -5,29 +5,31 @@
 @using ChainDoku.Services;
 @using System;
 @using Solver;
+@using System.Diagnostics;
 
 @inject SudokuGridGenerator GridGenerator
 @inject StateService StateService
 @inject NavigationManager Navigation
 @inject SolverService SolverService;
+@inject SettingsService Settings;
 
-<h2 class="title">
+<h2 class="h1 d-flex justify-content-center w-95vw">
     Sudoku
 </h2>
-<div class="top-actions">
-    <div class="left-actions">
-        <button @onclick="GoBack"><i class="fas fa-chevron-left"></i></button>
+<div class="d-flex justify-content-between m-auto w-95vw mb-1">
+    <div class="d-flex justify-content-start">
+        <Button OnClick=GoBack Icon="fas fa-chevron-left" />
     </div>
-    <div class="right-actions">
-        <button @onclick="ConfirmToFillTempValues"><i class="fas fa-magic"></i></button>
-        <button @onclick="ConfitmClearAll"><i class="fas fa-broom"></i></button>
+    <div class="d-flex justify-content-end gap-2">
+        <Button OnClick=ConfirmToFillTempValues Icon="fas fa-magic" />
+        <Button OnClick=ConfitmClearAll Icon="fas fa-broom" />
     </div>
 </div>
-<div class="game">
-    <div class="table-grid">
+<div class="d-flex flex-column game">
+    <div class=" d-flex flex-column w-95vw m-auto table-grid">
         @for (var row = 0; row < 9; row++)
         {
-            <div class="table-row">
+            <div class="d-flex table-row">
                 @for (int col = 0; col < 9; col++)
                 {
                     <SCell Cell="_grid[row,col]" Click="UpdateSelection" State="_state" />
@@ -36,22 +38,22 @@
         }
     </div>
     <div class="actions button-actions">
-        <button disabled class="disabled" @onclick="Revert">
+        <Button IsDisabled=true OnClick=Revert Color="Color.None">
             <i class="fas fa-undo"></i>
             <span>Undo</span>
-        </button>
-        <button @onclick="Clear">
+        </Button>
+        <Button OnClick="Clear" Color="Color.None">
             <i class="fas fa-eraser"></i>
             <span>Clear</span>
-        </button>
-        <button @onclick="ChangeMode">
-            <i class="@(_isNotesMode ? "notes" : "") far fa-edit"></i>
+        </Button>
+        <Button OnClick="ChangeMode" Color="Color.None">
+            <i class="@(_state.IsNotesMode ? "notes" : "") far fa-edit"></i>
             <span>Notes</span>
-        </button>
-        <button @onclick="SolveOne">
+        </Button>
+        <Button OnClick="SolveOne" Color="Color.None">
             <i class="far fa-lightbulb"></i>
             <span>Help</span>
-        </button>
+        </Button>
     </div>
     <div class="actions digit-actions">
         @for (var i = 1; i < 10; i++)
@@ -60,13 +62,13 @@
             var isOver = IsDigitOver(digit);
             if (isOver)
             {
-                <button class="disabled" disabled></button>
+                <Button class="disabled" IsDisabled=true Color="Color.Primary"></Button>
             }
             else
             {
-                <button @onclick='() => SetDigit(digit)'>
+                <Button OnClick='() => SetDigit(digit)' Color="Color.Primary">
                     @digit
-                </button>
+                </Button>
             }
         }
     </div>
@@ -75,13 +77,11 @@
     [Parameter]
     public int Resume { get; set; }
 
-    private const string ThemeKey = nameof(ThemeKey);
-    private const string DiffKey = nameof(DiffKey);
-    private Difficulty _difficulty;
-    private string _theme;
-    private bool _isNotesMode = false;
     private SudokuGrid _grid;
     private GridState _state;
+
+    private Models.Cell ActiveGridCell => _grid[_state.ActiveRow.Value, _state.ActiveColumn.Value];
+    private bool ActiveCell => _state.ActiveRow.HasValue && _state.ActiveColumn.HasValue;
 
     private bool IsDigitOver(int digit) => _grid.Grid.Cast<Cell>().Count(c => c.Value == digit) >= 9;
 
@@ -93,11 +93,9 @@
 
     private void Init()
     {
-        _difficulty = (Difficulty)Preferences.Get("DiffKey", 0);
-        _theme = Preferences.Get(ThemeKey, "light");
         _grid = Resume == 1
             ? new SudokuGrid(StateService.GetLastState())
-            : GridGenerator.GenerateGrid(_difficulty);
+            : GridGenerator.GenerateGrid(Settings.Difficulty);
         StateService.SaveState(_grid.Grid);
         _state = new GridState();
     }
@@ -110,17 +108,11 @@
     private void UpdateSelection(int row, int column)
     {
         PerformFeedback();
-        if (row == _state.ActiveRow && column == _state.ActiveColumn)
+        if (row != _state.ActiveRow || column != _state.ActiveColumn)
         {
-            _state.Clear();
+            _state.SetCell(_grid[row, column]);
+            StateHasChanged();
         }
-        else
-        {
-            _state.ActiveRow = row;
-            _state.ActiveColumn = column;
-            _state.ActiveValue = _grid[row, column].Value;
-        }
-        StateHasChanged();
     }
 
     private void SetDigit(int value)
@@ -131,26 +123,25 @@
             return;
         }
 
-        if (!_isNotesMode)
+        if (!_state.IsNotesMode)
         {
             if (ActiveGridCell.Value != value)
             {
-                var block = _state.Block;
-                foreach (var cell in _grid.Where(c => !c.IsStatic && (c.Row == _state.ActiveRow.Value || c.Column == _state.ActiveColumn.Value || c.Block == block)))
+                foreach (var cell in _grid.Where(c => !c.IsStatic && (c.Row == _state.ActiveRow.Value || c.Column == _state.ActiveColumn.Value || c.Block == _state.ActiveBlock)))
                 {
                     cell.Candidates.Remove(value);
                 }
             }
             ActiveGridCell.ToggleValue(value);
-            _state.ActiveValue = value;
         }
         else
         {
             ActiveGridCell.ToggleTemp(value);
-            _state.ActiveValue = null;
         }
-        StateService.SaveState(_grid.Grid);
 
+        _state.SetCell(ActiveGridCell);
+
+        StateService.SaveState(_grid.Grid);
         StateHasChanged();
     }
 
@@ -159,7 +150,11 @@
         if (StateService.TryGetState(out Cell[,] oldCells))
         {
             _grid.SetState(oldCells);
-            _state.ActiveValue = ActiveCell && ActiveGridCell.HasValue ? ActiveGridCell.Value : null;
+            if (ActiveCell)
+            {
+                _state.SetCell(ActiveGridCell);
+            }
+            StateHasChanged();
         }
     }
 
@@ -168,12 +163,13 @@
         PerformFeedback();
 
         SolverService.TrySolve(_grid);
+        StateHasChanged();
     }
 
     private void ChangeMode()
     {
         PerformFeedback();
-        _isNotesMode = !_isNotesMode;
+        _state.ToggleNotes();
     }
 
     private void Clear()
@@ -185,7 +181,9 @@
         }
 
         ActiveGridCell.Clear();
+
         SaveState();
+        StateHasChanged();
     }
 
     private async Task ConfirmToFillTempValues()
@@ -212,7 +210,7 @@
 
     private void FillTempValues()
     {
-        foreach(var cell in _grid.Where(c => !c.HasValue))
+        foreach (var cell in _grid.Where(c => !c.HasValue))
         {
             for (int val = 1; val <= 9; val++)
             {
@@ -222,6 +220,7 @@
                 }
             }
         }
+
         _state.Clear();
         StateHasChanged();
     }
@@ -241,10 +240,6 @@
     {
         StateService.SaveState(_grid.Grid);
     }
-
-    private Cell ActiveGridCell => _grid[_state.ActiveRow.Value, _state.ActiveColumn.Value];
-
-    private bool ActiveCell => _state.ActiveRow.HasValue && _state.ActiveColumn.HasValue;
 
     private void PerformFeedback()
     {

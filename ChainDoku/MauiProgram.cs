@@ -29,6 +29,7 @@ namespace ChainDoku
             builder.Services.AddScoped<SerializeService>();
             builder.Services.AddSingleton<SolverService>();
 
+            builder.Services.AddBootstrapBlazor();
             var app = builder.Build();
 
             // HACK: Set KeepScreenOn after some time app initialized

@@ -1,42 +1,10 @@
-﻿.title {
-    display: flex;
-    justify-content: center;
-    align-content: center;
-    text-align: center;
-    width: 95vw;
+﻿.non-selectable {
     -webkit-user-select: none; /* Safari */
     -ms-user-select: none; /* IE 10 and IE 11 */
     user-select: none; /* Standard syntax */
 }
 
-.top-actions {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    margin: 0 auto;
-    width: 95vw;
-    padding-bottom: 10px;
-}
-    .top-actions button {
-        background-color: unset;
-        color: var(--font-color);
-        border-color: var(--border-color: black);
-    }
-
-.left-actions {
-    display: flex;
-    justify-content: flex-start;
-}
-
-.right-actions {
-    display: flex;
-    justify-content: end;
-    gap: 10px;
-}
-
 .game {
-    display: flex;
-    flex-direction: column;
     gap: 20px;
     margin: 0 auto;
     -webkit-user-select: none; /* Safari */
@@ -45,28 +13,23 @@
 }
 
 .table-grid {
-    display: flex;
-    flex-direction: column;
-    background-color: var(--grid-bg-color);
-    width: 95vw;
-    margin: auto;
+    /*background-color: var(--grid-bg-color);*/
 }
 
 .table-row {
-    width: 100%;
-    display: flex;
+    /*border:unset;*/
 }
 
     .table-row:first-child {
-        border-top: 2px solid var(--font-color);
+        border-top: 2px solid var(--primary) !important;
     }
 
     .table-row:nth-child(3n+3) {
-        border-bottom: 2px solid var(--font-color);
+        border-bottom: 2px solid var(--primary) !important;
     }
 
 .table-cell {
-    border: 1px solid var(--border-color);
+    border: 0.5px solid var(--primary) !important;
     width: 10.5vw;
     height: 10.5vw;
     text-align: center;
@@ -78,15 +41,15 @@
     flex: 1 1 0;
     margin: 0;
     padding: 0;
-    background-color:inherit;
+    background-color: inherit;
 }
 
     .table-cell:nth-child(3n+3) {
-        border-right: 2px solid var(--font-color);
+        border-right: 2px solid var(--primary) !important;
     }
 
     .table-cell:first-child {
-        border-left: 2px solid var(--font-color);
+        border-left: 2px solid var(--primary)  !important;
     }
 
 .sub-grid {
@@ -94,7 +57,7 @@
     flex-direction: column;
     width: 100%;
     height: 100%;
-    color: var(--font-color);
+    color: var(--primary);
     font-size: 3vw;
     line-height: 3vw;
 }
@@ -115,7 +78,7 @@
 }
 
 .static-value {
-    color: var(--font-color);
+    color: var(--primary);
 }
 
 .non-static-value {
@@ -152,13 +115,8 @@
     margin-left: 15px;
     margin-right: 15px;
 }
-
-    .actions > button:active {
-        background-color: var(--selected-bg-color);
-        border-radius: 10px;
-    }
     .actions > * {
-        color: var(--font-color);
+        color: var(--primary) !important;
     }
 
 .button-actions > button {
@@ -188,16 +146,13 @@
     opacity: 0.4;
 }
 
-.digit-actions {
-    gap: 1vw;
-}
 
     .digit-actions > button {
         font-size: 10vw;
-        color: var(--font-color);
+        /*color: var(--font-color);*/
         cursor: pointer;
         border: unset;
-        background-color: inherit;
+        background-color: inherit !important;
         display: flex;
         flex: 1 1 0;
         justify-content: center;

@@ -1,5 +1,4 @@
 ﻿:root {
-    --main-bg-color: white;
     --grid-bg-color: white;
     --border-color: #becbdc;
     --font-color: #344861;
@@ -8,15 +7,26 @@
     --selected-val-bg-color: #c3d7ea;
     --selected-cell-bg-color: #bbdefb;
 }
-[data-theme="dark"] {
-    color: #6d7080;
-    --font-color: #6d7080;
-    --main-bg-color: #181715;
-    --grid-bg-color: #292a30;
-    --border-color: #6d7080;
-    --non-static-color: #7ab2ff;
-    --selected-bg-color: #23344a;
-    --selected-val-bg-color: #34455b;
-    --selected-cell-bg-color: #364b73;
+:root [data-theme="dark"] {
+    --blue: #007bff;
+    --indigo: #6610f2;
+    --purple: #6f42c1;
+    --pink: #e83e8c;
+    --red: #dc3545;
+    --orange: #fd7e14;
+    --yellow: #ffc107;
+    --green: #28a745;
+    --teal: #20c997;
+    --cyan: #17a2b8;
+    --white: #fff;
+    --gray: #6c757d;
+    --gray-dark: #343a40;
+    --primary: #123456;
+    --secondary: #6c757d;
+    --success: #28a745;
+    --info: #17a2b8;
+    --warning: #ffc107;
+    --danger: #dc3545;
+    --light: #f8f9fa;
+    --dark: #343a40;
 }
-
