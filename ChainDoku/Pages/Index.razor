@@ -1,87 +1,59 @@
 ﻿@page "/{stay?}"
+@using ChainDoku.Enums;
 @using Models.Enums;
 @using ChainDoku.Services;
 @inject NavigationManager NavigationManager;
 @inject StateService StateService;
-<theme data-theme="@_theme">
-    <div class="main-content">
-        <header></header>
-        <div class="main-body">
-            <h1>Sudoku</h1>
-            <div class="main-actions">
-                <div>
-                    <label class="label">Theme</label>
-                    <select class="custom-select" aria-label="Default select example" @bind="Theme">
-                        <option value="light">Light</option>
-                        <option value="dark">Dark</option>
-                    </select>
-                </div>
-                @if (_lastStateExists)
-                {
-                    <button class="btn btn-primary" @onclick="Continue">
-                        <span class="oi oi-play-circle" aria-hidden="true"></span> Continue
-                    </button>
-                }
-                <div>
-                    <label class="label">Select Difficulty</label>
-                    <select class="custom-select" aria-label="Default select example" @bind="Diff">
-                        @foreach (var i in Enum.GetValues<Difficulty>())
-                        {
-                            <option value="@i">@(Enum.GetName<Difficulty>(i))</option>
-                        }
-                    </select>
-                </div>
-                <button class="btn btn-success" @onclick="NewGame">
-                    New Game
-                </button>
-            </div>
+@inject SettingsService Settings;
+<Layout ShowFooter=false>
+    <Header>
+        <div class="d-flex justify-content-center align-items-center h1 mt-auto">Sudoku</div>
+    </Header>
+    <Main>
+        <div class="d-flex justify-content-center align-items-center align-content-center flex-column h-100">
+            <BootstrapLabel>Select Theme</BootstrapLabel>
+            <Select Color=Color.Primary style="margin-bottom:20px; width:75%" TValue="ThemeEnum" @bind-Value=Theme Items="Themes" DisplayText="Select theme" ShowLabel="true" />
+
+            @if (_lastStateExists)
+            {
+                <Button class="w-75" Color=Color.Secondary Icon="fas fa-circle-play" OnClick=Continue Text="Continue" />
+            }
+            <Select style="width:75%" Color=Color.Primary TValue="Difficulty" @bind-Value=Difficulty Items="Difficulties" DisplayText="Select Difficulty" ShowLabel="true" />
+            <Button class="w-75" Color=Color.Primary style="margin-top:20px" OnClick=NewGame Text="New Game" />
         </div>
-        <footer>
-        </footer>
-    </div>
-</theme>
+    </Main>
+    <Footer>
+        <div class="d-flex justify-content-center align-items-center footer">Footer</div>
+    </Footer>
+</Layout>
 @code {
     [Parameter]
     public string Stay { get; set; }
 
-    private const string DiffKey = nameof(DiffKey);
-    private const string ThemeKey = nameof(ThemeKey);
+    private ThemeEnum Theme
+    {
+        get => Settings.Theme;
+        set => Settings.Theme = value;
+    }
+
+    private IEnumerable<SelectedItem> Themes = Enum.GetValues<ThemeEnum>().Select(t => new SelectedItem(t.ToString(), Enum.GetName<ThemeEnum>(t)));
+
+    private Difficulty Difficulty
+    {
+        get => Settings.Difficulty;
+        set => Settings.Difficulty = value;
+    }
+
+    private IEnumerable<SelectedItem> Difficulties = Enum.GetValues<Difficulty>().Select(t => new SelectedItem(t.ToString(), Enum.GetName<Difficulty>(t)));
+
     private bool _lastStateExists;
-    private Difficulty _difficulty;
-
-    private Difficulty Diff
-    {
-        get => _difficulty; set
-        {
-            _difficulty = value;
-            Preferences.Set(DiffKey, (int)_difficulty);
-        }
-    }
-
-    private string _theme;
-
-    private string Theme
-    {
-        get => _theme;
-        set
-        {
-            _theme = value;
-            Preferences.Set(ThemeKey, value);
-        }
-    }
-
     protected override void OnInitialized()
     {
         base.OnInitialized();
-
         // TODO: remove when dev state is done because of not finaly determined structure of saving cells
         // may be splitted into values and candidates preferences to low amount of memory
         StateService.ClearState();
-
         _lastStateExists = StateService.LastStateExists();
-
-        _difficulty = (Difficulty)Preferences.Get(DiffKey, 0);
-        _theme = Preferences.Get(ThemeKey, "light");
         if (_lastStateExists && string.IsNullOrEmpty(Stay))
         {
             NavigationManager.NavigateTo($"/gamepage/1");

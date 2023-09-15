@@ -1,6 +1,7 @@
 ﻿@using Models;
 @using System.Text;
 @using ChainDoku.Services;
+@using System.Diagnostics;
 
 <button class="table-cell @GetClasses()" @onclick='() => Click(Cell.Row, Cell.Column)'>
     @if (Cell.HasValue || Cell.IsEmpty)
@@ -15,7 +16,7 @@
 @code {
     [Parameter]
     public GridState State { get; set; }
-    
+
     [Parameter]
     public Cell Cell { get; set; }
 
@@ -43,7 +44,7 @@
         {
             sb.Append(" selected-cell");
         }
-        else if (Cell.Row == State.ActiveRow || Cell.Column == State.ActiveColumn || State.Block == Cell.Block)
+        else if (Cell.Row == State.ActiveRow || Cell.Column == State.ActiveColumn || State.ActiveBlock == Cell.Block)
         {
             sb.Append(" selected");
         }
